@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  brand-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: brand-hub
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_PATH=/app/data/brand.db
+      - JWT_PRIVATE_KEY_PATH=/app/keys/private.pem
+      - JWT_PUBLIC_KEY_PATH=/app/keys/public.pem
+      - JWT_ISSUER=https://yourbrand.com/hub
+      - JWT_ACCESS_EXPIRES_IN=15m
+      - JWT_REFRESH_EXPIRES_IN=30d
+      - SMS_PROVIDER_URL=${SMS_PROVIDER_URL:-}
+      - SMS_PROVIDER_KEY=${SMS_PROVIDER_KEY:-}
+      - SMS_MOCK_MODE=${SMS_MOCK_MODE:-true}
+    volumes:
+      # Data persistence
+      - brand-hub-data:/app/data
+      # Keys (read-only for security)
+      - ./keys:/app/keys:ro
+    networks:
+      - brand-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  brand-network:
+    driver: bridge
+
+volumes:
+  brand-hub-data:
+    driver: local
