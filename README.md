@@ -75,9 +75,11 @@ curl http://localhost:3000/.well-known/jwks.json
 | `JWT_ISSUER` | 否 | https://yourbrand.com/hub | JWT 签发者 |
 | `JWT_ACCESS_EXPIRES_IN` | 否 | 15m | Access Token 有效期 |
 | `JWT_REFRESH_EXPIRES_IN` | 否 | 30d | Refresh Token 有效期 |
-| `SMS_PROVIDER_URL` | 生产必填 | - | 短信服务地址 |
-| `SMS_PROVIDER_KEY` | 生产必填 | - | 短信服务 API Key |
+| `JWT_AUDIENCES` | 否 | brand-hub | JWT audience 列表（逗号分隔） |
+| `SPUG_TOKEN` | 生产必填 | - | Spug 短信服务 Token |
+| `SPUG_TEMPLATE_NAME` | 否 | 品牌中心短信验证码 | Spug 短信模板名称 |
 | `SMS_MOCK_MODE` | 否 | false | Mock 模式（测试用） |
+| `SMS_MOCK_CODE` | 否 | 123456 | Mock 模式验证码 |
 
 ## API 端点
 
@@ -315,7 +317,7 @@ brand-hub/
 
 ### Q: 验证码发送失败？
 
-检查 `SMS_PROVIDER_URL` 和 `SMS_PROVIDER_KEY` 是否正确配置。开发环境可设置 `SMS_MOCK_MODE=true` 使用 Mock 模式。
+检查 `SPUG_TOKEN` 是否正确配置。开发环境可设置 `SMS_MOCK_MODE=true` 使用 Mock 模式。
 
 ### Q: Token 验证失败？
 

@@ -42,10 +42,11 @@ function loadKeys() {
  * @returns {string} JWT token
  */
 function generateAccessToken(user, membership, audiences = []) {
+  const finalAudiences = audiences.length > 0 ? audiences : config.jwt.audiences;
   const payload = {
     sub: user.sub,
     iss: config.jwt.issuer,
-    aud: audiences.length > 0 ? audiences : ['brand-hub'],
+    aud: finalAudiences,
     iat: Math.floor(Date.now() / 1000),
     nickname: user.nickname,
     'brand.membership': membership?.plan || 'free',

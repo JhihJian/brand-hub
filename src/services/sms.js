@@ -7,6 +7,8 @@ const { config } = require('../config');
 const { generateSmsCode } = require('../utils/validators');
 const cache = require('./cache');
 
+const SPUG_API_URL = 'https://push.spug.cc/send';
+
 /**
  * Send SMS verification code
  * @param {string} phone - Phone number with country code
@@ -27,25 +29,46 @@ async function sendSmsCode(phone) {
 
   // Send via SMS provider (skip in mock mode)
   if (!config.sms.mockMode) {
+    if (!config.sms.spugToken) {
+      console.error('SMS: SPUG_TOKEN not configured');
+      return {
+        success: false,
+        error: '短信服务未配置',
+      };
+    }
+
     try {
-      const response = await fetch(config.sms.providerUrl, {
+      const url = `${SPUG_API_URL}/${config.sms.spugToken}`;
+
+      // Spug API 使用 application/x-www-form-urlencoded 格式
+      const formData = new URLSearchParams();
+      formData.append('name', config.sms.spugTemplateName);
+      formData.append('code', actualCode);
+      formData.append('targets', phone);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.sms.providerKey}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({
-          phone,
-          code: actualCode,
-        }),
+        body: formData.toString(),
       });
 
-      if (!response.ok) {
-        // Log error but don't fail - code is already saved
-        console.error('SMS provider error:', response.status);
+      const result = await response.json();
+
+      if (result.code !== 200) {
+        console.error('SMS provider error:', result);
+        return {
+          success: false,
+          error: result.message || result.msg || '发送失败',
+        };
       }
     } catch (error) {
       console.error('SMS provider error:', error.message);
+      return {
+        success: false,
+        error: '短信发送失败，请稍后重试',
+      };
     }
   }
 

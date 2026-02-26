@@ -21,12 +21,13 @@ const config = {
     issuer: process.env.JWT_ISSUER || 'https://yourbrand.com/hub',
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+    audiences: process.env.JWT_AUDIENCES ? process.env.JWT_AUDIENCES.split(',').map(a => a.trim()) : ['brand-hub'],
   },
 
   // SMS (spug)
   sms: {
-    providerUrl: process.env.SMS_PROVIDER_URL || '',
-    providerKey: process.env.SMS_PROVIDER_KEY || '',
+    spugToken: process.env.SPUG_TOKEN || '',
+    spugTemplateName: process.env.SPUG_TEMPLATE_NAME || '品牌中心短信验证码',
     mockMode: process.env.SMS_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test',
     mockCode: process.env.SMS_MOCK_CODE || '123456',
   },
@@ -46,11 +47,8 @@ function validateConfig() {
   const errors = [];
 
   if (config.nodeEnv === 'production') {
-    if (!config.sms.providerUrl) {
-      errors.push('SMS_PROVIDER_URL is required in production');
-    }
-    if (!config.sms.providerKey) {
-      errors.push('SMS_PROVIDER_KEY is required in production');
+    if (!config.sms.spugToken) {
+      errors.push('SPUG_TOKEN is required in production');
     }
   }
 
