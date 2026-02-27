@@ -71,8 +71,9 @@ const api = {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      const error = new Error(data.message || 'Request failed');
-      error.code = data.code;
+      const errorMsg = data.error?.message || data.message || 'Request failed';
+      const error = new Error(errorMsg);
+      error.code = data.error?.code || data.code;
       error.status = response.status;
       throw error;
     }
