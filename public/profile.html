@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人信息 - 节物</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-brand">节物</div>
+      <div class="header-actions">
+        <button class="btn btn-link" id="logoutBtn">登出</button>
+      </div>
+    </header>
+
+    <main>
+      <div id="message" class="message hidden"></div>
+
+      <section class="section">
+        <h2 class="section-title">个人信息</h2>
+        <div class="data-list" id="profileData">
+          <div class="data-row">
+            <span class="data-label">手机</span>
+            <span class="data-value" id="phone">-</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">昵称</span>
+            <span class="data-value">
+              <span id="nicknameDisplay">-</span>
+              <input type="text" class="form-input hidden" id="nicknameInput" style="width: 150px; display: inline-block;">
+              <button class="btn btn-small" id="editNicknameBtn">修改</button>
+              <button class="btn btn-small hidden" id="saveNicknameBtn">保存</button>
+              <button class="btn btn-small btn-link hidden" id="cancelNicknameBtn">取消</button>
+            </span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">角色</span>
+            <span class="data-value" id="roles">-</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">注册时间</span>
+            <span class="data-value" id="createdAt">-</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">会员信息</h2>
+        <div class="data-list">
+          <div class="data-row">
+            <span class="data-label">等级</span>
+            <span class="data-value"><span class="tag" id="membershipPlan">free</span></span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">到期时间</span>
+            <span class="data-value" id="membershipExpires">-</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">来源</span>
+            <span class="data-value" id="membershipSource">-</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    (function() {
+      const messageEl = document.getElementById('message');
+      const phoneEl = document.getElementById('phone');
+      const nicknameDisplayEl = document.getElementById('nicknameDisplay');
+      const nicknameInputEl = document.getElementById('nicknameInput');
+      const editNicknameBtn = document.getElementById('editNicknameBtn');
+      const saveNicknameBtn = document.getElementById('saveNicknameBtn');
+      const cancelNicknameBtn = document.getElementById('cancelNicknameBtn');
+      const rolesEl = document.getElementById('roles');
+      const createdAtEl = document.getElementById('createdAt');
+      const membershipPlanEl = document.getElementById('membershipPlan');
+      const membershipExpiresEl = document.getElementById('membershipExpires');
+      const membershipSourceEl = document.getElementById('membershipSource');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'message message-' + type;
+        messageEl.classList.remove('hidden');
+      }
+
+      function hideMessage() {
+        messageEl.classList.add('hidden');
+      }
+
+      function maskPhone(phone) {
+        if (!phone || phone.length < 7) return phone;
+        return phone.slice(0, 3) + '****' + phone.slice(-4);
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('zh-CN');
+      }
+
+      function formatPlan(plan) {
+        const plans = {
+          'free': '免费',
+          'monthly': '月度会员',
+          'yearly': '年度会员',
+          'lifetime': '永久会员'
+        };
+        return plans[plan] || plan;
+      }
+
+      async function loadProfile() {
+        try {
+          const user = await api.getMe();
+
+          phoneEl.textContent = maskPhone(user.phone);
+          nicknameDisplayEl.textContent = user.nickname;
+          nicknameInputEl.value = user.nickname;
+          rolesEl.textContent = user.roles ? user.roles.join(', ') : 'user';
+          createdAtEl.textContent = formatDate(user.created_at);
+
+          membershipPlanEl.textContent = formatPlan(user.membership?.plan || 'free');
+          membershipExpiresEl.textContent = user.membership?.expires_at
+            ? formatDate(user.membership.expires_at)
+            : (user.membership?.plan === 'lifetime' ? '永久' : '-');
+          membershipSourceEl.textContent = user.membership?.source || '-';
+
+          api.setUserInfo(user);
+        } catch (error) {
+          showMessage(error.message || '加载失败', 'error');
+        }
+      }
+
+      editNicknameBtn.addEventListener('click', function() {
+        nicknameDisplayEl.classList.add('hidden');
+        editNicknameBtn.classList.add('hidden');
+        nicknameInputEl.classList.remove('hidden');
+        saveNicknameBtn.classList.remove('hidden');
+        cancelNicknameBtn.classList.remove('hidden');
+        nicknameInputEl.focus();
+      });
+
+      cancelNicknameBtn.addEventListener('click', function() {
+        nicknameInputEl.classList.add('hidden');
+        saveNicknameBtn.classList.add('hidden');
+        cancelNicknameBtn.classList.add('hidden');
+        nicknameDisplayEl.classList.remove('hidden');
+        editNicknameBtn.classList.remove('hidden');
+        nicknameInputEl.value = nicknameDisplayEl.textContent;
+      });
+
+      saveNicknameBtn.addEventListener('click', async function() {
+        const newNickname = nicknameInputEl.value.trim();
+
+        if (!newNickname) {
+          showMessage('昵称不能为空', 'error');
+          return;
+        }
+
+        try {
+          const result = await api.updateMe(newNickname);
+          nicknameDisplayEl.textContent = result.nickname;
+          nicknameInputEl.classList.add('hidden');
+          saveNicknameBtn.classList.add('hidden');
+          cancelNicknameBtn.classList.add('hidden');
+          nicknameDisplayEl.classList.remove('hidden');
+          editNicknameBtn.classList.remove('hidden');
+          showMessage('昵称已更新', 'success');
+          setTimeout(hideMessage, 2000);
+        } catch (error) {
+          showMessage(error.message || '更新失败', 'error');
+        }
+      });
+
+      logoutBtn.addEventListener('click', async function() {
+        await api.logout();
+        window.location.href = '/login.html';
+      });
+
+      api.ensureAuth().then(function(authed) {
+        if (authed) {
+          loadProfile();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
