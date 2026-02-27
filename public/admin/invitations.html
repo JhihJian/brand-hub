@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>邀请码管理 - 节物</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-brand">节物</div>
+      <div class="header-actions">
+        <span id="adminName" style="font-size: 12px; color: #888;"></span>
+      </div>
+    </header>
+
+    <main>
+      <div id="message" class="message hidden"></div>
+
+      <section class="section">
+        <h2 class="section-title">邀请码管理</h2>
+
+        <div style="margin-bottom: 16px;">
+          <button class="btn" id="createBtn">批量生成</button>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 16px;">
+          <select class="form-input" id="statusFilter" style="max-width: 150px;">
+            <option value="">全部状态</option>
+            <option value="unused">未使用</option>
+            <option value="used">已使用</option>
+          </select>
+          <select class="form-input" id="channelFilter" style="max-width: 150px;">
+            <option value="">全部渠道</option>
+            <option value="web">web</option>
+            <option value="app">app</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>邀请码</th>
+              <th>渠道</th>
+              <th>预设会员</th>
+              <th>状态</th>
+              <th>创建时间</th>
+            </tr>
+          </thead>
+          <tbody id="invitationTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: #888;">加载中...</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination" id="pagination"></div>
+      </section>
+
+      <nav class="nav">
+        <a href="/admin/index.html" class="nav-link">用户管理</a>
+        <a href="/admin/invitations.html" class="nav-link active">邀请码管理</a>
+        <a href="/profile.html" class="nav-link">返回前台</a>
+      </nav>
+    </main>
+  </div>
+
+  <!-- Create Modal -->
+  <div class="modal-overlay hidden" id="createModal">
+    <div class="modal">
+      <h3 class="modal-title">批量生成邀请码</h3>
+      <div class="form-group">
+        <label class="form-label">数量</label>
+        <input type="number" class="form-input" id="createCount" value="10" min="1" max="500">
+      </div>
+      <div class="form-group">
+        <label class="form-label">渠道</label>
+        <input type="text" class="form-input" id="createChannel" value="admin">
+      </div>
+      <div class="form-group">
+        <label class="form-label">预设会员</label>
+        <select class="form-input" id="createMembership">
+          <option value="free">免费</option>
+          <option value="monthly">月度会员</option>
+          <option value="yearly">年度会员</option>
+          <option value="lifetime">永久会员</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">有效天数（可选）</label>
+        <input type="number" class="form-input" id="createDays" placeholder="留空则永久有效">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-small btn-link" id="cancelCreateBtn">取消</button>
+        <button class="btn btn-small" id="confirmCreateBtn">生成</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    (function() {
+      const messageEl = document.getElementById('message');
+      const adminNameEl = document.getElementById('adminName');
+      const statusFilter = document.getElementById('statusFilter');
+      const channelFilter = document.getElementById('channelFilter');
+      const tableBody = document.getElementById('invitationTableBody');
+      const paginationEl = document.getElementById('pagination');
+      const createBtn = document.getElementById('createBtn');
+      const createModal = document.getElementById('createModal');
+      const cancelCreateBtn = document.getElementById('cancelCreateBtn');
+      const confirmCreateBtn = document.getElementById('confirmCreateBtn');
+
+      let currentPage = 1;
+      let totalPages = 1;
+      const limit = 20;
+
+      function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'message message-' + type;
+        messageEl.classList.remove('hidden');
+      }
+
+      function hideMessage() {
+        messageEl.classList.add('hidden');
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('zh-CN');
+      }
+
+      function formatPlan(plan) {
+        const plans = {
+          'free': '免费',
+          'monthly': '月度',
+          'yearly': '年度',
+          'lifetime': '永久'
+        };
+        return plans[plan] || plan;
+      }
+
+      function statusTag(status) {
+        if (status === 'unused') {
+          return '<span class="tag tag-success">未使用</span>';
+        }
+        return '<span class="tag tag-info">已使用</span>';
+      }
+
+      window.loadInvitations = async function(page) {
+        const params = { page, limit };
+        if (statusFilter.value) {
+          params.status = statusFilter.value;
+        }
+        if (channelFilter.value) {
+          params.channel = channelFilter.value;
+        }
+
+        try {
+          const result = await api.getInvitations(params);
+
+          if (result.items.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">暂无数据</td></tr>';
+          } else {
+            tableBody.innerHTML = result.items.map(function(inv) {
+              return '<tr>' +
+                '<td style="font-family: monospace;">' + inv.code + '</td>' +
+                '<td>' + (inv.channel || '-') + '</td>' +
+                '<td>' + formatPlan(inv.preset_membership) + '</td>' +
+                '<td>' + statusTag(inv.status) + '</td>' +
+                '<td>' + formatDate(inv.created_at) + '</td>' +
+              '</tr>';
+            }).join('');
+          }
+
+          currentPage = result.page;
+          totalPages = Math.ceil(result.total / limit);
+          renderPagination();
+        } catch (error) {
+          showMessage(error.message || '加载失败', 'error');
+        }
+      };
+
+      function renderPagination() {
+        if (totalPages <= 1) {
+          paginationEl.innerHTML = '';
+          return;
+        }
+
+        let html = '';
+
+        if (currentPage > 1) {
+          html += '<button class="btn btn-small" onclick="loadInvitations(' + (currentPage - 1) + ')">上一页</button>';
+        }
+
+        html += '<span>第 ' + currentPage + '/' + totalPages + ' 页</span>';
+
+        if (currentPage < totalPages) {
+          html += '<button class="btn btn-small" onclick="loadInvitations(' + (currentPage + 1) + ')">下一页</button>';
+        }
+
+        paginationEl.innerHTML = html;
+      }
+
+      statusFilter.addEventListener('change', function() {
+        loadInvitations(1);
+      });
+
+      channelFilter.addEventListener('change', function() {
+        loadInvitations(1);
+      });
+
+      createBtn.addEventListener('click', function() {
+        createModal.classList.remove('hidden');
+      });
+
+      cancelCreateBtn.addEventListener('click', function() {
+        createModal.classList.add('hidden');
+      });
+
+      confirmCreateBtn.addEventListener('click', async function() {
+        const count = parseInt(document.getElementById('createCount').value, 10);
+        const channel = document.getElementById('createChannel').value.trim();
+        const presetMembership = document.getElementById('createMembership').value;
+        const durationDays = document.getElementById('createDays').value;
+
+        if (!count || count < 1 || count > 500) {
+          showMessage('数量必须在 1-500 之间', 'error');
+          return;
+        }
+
+        try {
+          const result = await api.createInvitations({
+            count,
+            channel,
+            preset_membership: presetMembership,
+            preset_duration_days: durationDays ? parseInt(durationDays, 10) : undefined,
+          });
+
+          createModal.classList.add('hidden');
+          showMessage('已生成 ' + result.count + ' 个邀请码', 'success');
+          setTimeout(hideMessage, 3000);
+          loadInvitations(1);
+        } catch (error) {
+          showMessage(error.message || '生成失败', 'error');
+        }
+      });
+
+      api.ensureAdmin().then(function(authed) {
+        if (authed) {
+          const user = api.getUserInfo();
+          adminNameEl.textContent = user?.nickname || 'admin';
+          loadInvitations(1);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
