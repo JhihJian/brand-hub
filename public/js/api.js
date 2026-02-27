@@ -76,7 +76,7 @@ const api = {
       // 如果请求携带了 token 但返回 401，说明 token 过期/失效，跳转到 401 页面
       if (response.status === 401 && token) {
         this.clearTokens();
-        window.location.href = '401.html';
+        window.location.href = '/hub/401.html';
         throw new Error('Unauthorized');
       }
       const errorMsg = data.error?.message || data.message || 'Request failed';
@@ -235,7 +235,7 @@ const api = {
   async ensureAuth() {
     const token = this.getRefreshToken();
     if (!token) {
-      window.location.href = '401.html';
+      window.location.href = '/hub/401.html';
       return false;
     }
 
@@ -244,7 +244,7 @@ const api = {
         await this.refreshAccessToken();
       } catch (e) {
         this.clearTokens();
-        window.location.href = '401.html';
+        window.location.href = '/hub/401.html';
         return false;
       }
     }
