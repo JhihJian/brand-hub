@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>验证邀请码 - 节物</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-brand">节物</div>
+    </header>
+
+    <main>
+      <div id="message" class="message hidden"></div>
+
+      <form id="inviteForm">
+        <div class="form-group">
+          <label class="form-label">邀请码</label>
+          <input type="text" class="form-input" id="inviteCode" placeholder="请输入邀请码" required>
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary">验证邀请码</button>
+        </div>
+      </form>
+
+      <div class="link">
+        已有账号？<a href="login.html">前往登录</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    (function() {
+      const form = document.getElementById('inviteForm');
+      const inviteCodeInput = document.getElementById('inviteCode');
+      const messageEl = document.getElementById('message');
+
+      function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'message message-' + type;
+        messageEl.classList.remove('hidden');
+      }
+
+      function hideMessage() {
+        messageEl.classList.add('hidden');
+      }
+
+      // Check if already has invite_token
+      const params = new URLSearchParams(window.location.search);
+      const existingToken = params.get('invite_token');
+      if (existingToken) {
+        // Verify the token is still valid
+        sessionStorage.setItem('invite_token', existingToken);
+        window.location.href = 'register.html';
+        return;
+      }
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        hideMessage();
+
+        const inviteCode = inviteCodeInput.value.trim();
+
+        if (!inviteCode) {
+          showMessage('请输入邀请码', 'error');
+          return;
+        }
+
+        try {
+          const result = await api.verifyInviteCode(inviteCode);
+
+          // Store invite token
+          sessionStorage.setItem('invite_token', result.invite_token);
+          sessionStorage.setItem('invite_code', inviteCode);
+          sessionStorage.setItem('preset_membership', result.preset_membership);
+
+          // Redirect to register page
+          window.location.href = 'register.html';
+        } catch (error) {
+          showMessage(error.message || '验证失败', 'error');
+        }
+      });
+
+      // Redirect if already logged in
+      if (api.getRefreshToken()) {
+        window.location.href = 'profile.html';
+      }
+    })();
+  </script>
+</body>
+</html>

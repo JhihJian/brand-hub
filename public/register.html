@@ -35,11 +35,6 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">邀请码</label>
-          <input type="text" class="form-input" id="inviteCode" placeholder="请输入邀请码" required>
-        </div>
-
-        <div class="form-group">
           <button type="submit" class="btn btn-primary">注 册</button>
         </div>
       </form>
@@ -57,11 +52,11 @@
       const phoneInput = document.getElementById('phone');
       const codeInput = document.getElementById('code');
       const nicknameInput = document.getElementById('nickname');
-      const inviteCodeInput = document.getElementById('inviteCode');
       const sendCodeBtn = document.getElementById('sendCodeBtn');
       const messageEl = document.getElementById('message');
 
       let countdown = 0;
+      let inviteToken = sessionStorage.getItem('invite_token');
 
       function showMessage(text, type) {
         messageEl.textContent = text;
@@ -90,6 +85,18 @@
         }, 1000);
       }
 
+      // Check if invite_token exists, redirect to invite page if not
+      if (!inviteToken) {
+        window.location.href = 'invite.html';
+        return;
+      }
+
+      // Redirect if already logged in
+      if (api.getRefreshToken()) {
+        window.location.href = 'profile.html';
+        return;
+      }
+
       sendCodeBtn.addEventListener('click', async function() {
         const phone = phoneInput.value.trim();
 
@@ -101,10 +108,21 @@
         hideMessage();
 
         try {
-          const result = await api.sendSmsCode(phone, 'register');
+          const result = await api.sendSmsCode(phone, 'register', inviteToken);
           startCountdown(result.cooldown || 60);
           showMessage('验证码已发送', 'success');
         } catch (error) {
+          // If invite token invalid, redirect to invite page
+          if (error.code === 'INVITE_TOKEN_INVALID') {
+            sessionStorage.removeItem('invite_token');
+            sessionStorage.removeItem('invite_code');
+            sessionStorage.removeItem('preset_membership');
+            showMessage('邀请凭证已过期，请重新验证', 'error');
+            setTimeout(function() {
+              window.location.href = 'invite.html';
+            }, 1500);
+            return;
+          }
           showMessage(error.message || '发送失败', 'error');
         }
       });
@@ -116,25 +134,30 @@
         const phone = phoneInput.value.trim();
         const code = codeInput.value.trim();
         const nickname = nicknameInput.value.trim();
-        const inviteCode = inviteCodeInput.value.trim();
 
-        if (!phone || !code || !nickname || !inviteCode) {
+        if (!phone || !code || !nickname) {
           showMessage('请填写完整信息', 'error');
           return;
         }
 
         try {
-          await api.register(phone, code, inviteCode, nickname);
-          window.location.href = '/profile.html';
+          await api.register(phone, code, inviteToken, nickname);
+          window.location.href = 'profile.html';
         } catch (error) {
+          // If invite token invalid, redirect to invite page
+          if (error.code === 'INVITE_TOKEN_INVALID') {
+            sessionStorage.removeItem('invite_token');
+            sessionStorage.removeItem('invite_code');
+            sessionStorage.removeItem('preset_membership');
+            showMessage('邀请凭证已过期，请重新验证', 'error');
+            setTimeout(function() {
+              window.location.href = 'invite.html';
+            }, 1500);
+            return;
+          }
           showMessage(error.message || '注册失败', 'error');
         }
       });
-
-      // Redirect if already logged in
-      if (api.getRefreshToken()) {
-        window.location.href = '/profile.html';
-      }
     })();
   </script>
 </body>

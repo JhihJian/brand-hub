@@ -11,6 +11,8 @@ let codeStore = null;
 let cooldownStore = null;
 let dailyLimitStore = null;
 let ipLimitStore = null;
+let inviteTokenStore = null;
+let inviteVerifyLimitStore = null;
 
 /**
  * Initialize all cache stores
@@ -40,6 +42,18 @@ function initCache() {
   ipLimitStore = new LRUCache({
     ...cacheOptions,
     ttl: 3600000, // 1 hour
+  });
+
+  // Invite token store: 30 minutes TTL
+  inviteTokenStore = new LRUCache({
+    ...cacheOptions,
+    ttl: 1800000, // 30 minutes
+  });
+
+  // Invite verify limit store: 1 minute TTL for rate limiting
+  inviteVerifyLimitStore = new LRUCache({
+    ...cacheOptions,
+    ttl: 60000, // 1 minute
   });
 }
 
@@ -148,6 +162,50 @@ function getIpCount(ip) {
 }
 
 /**
+ * Invite token operations
+ */
+function generateInviteToken(inviteCode) {
+  const { v4: uuidv4 } = require('uuid');
+  const token = uuidv4();
+  inviteTokenStore.set(`invite:${token}`, {
+    code: inviteCode,
+    createdAt: Date.now(),
+  });
+  return token;
+}
+
+function getInviteToken(token) {
+  return inviteTokenStore.get(`invite:${token}`);
+}
+
+function consumeInviteToken(token) {
+  const key = `invite:${token}`;
+  const data = inviteTokenStore.get(key);
+  if (data) {
+    inviteTokenStore.delete(key);
+  }
+  return data;
+}
+
+function isValidInviteToken(token) {
+  return inviteTokenStore.has(`invite:${token}`);
+}
+
+/**
+ * Invite verify rate limit operations
+ */
+function incrementInviteVerifyLimit(ip) {
+  const key = `verify:${ip}`;
+  const current = inviteVerifyLimitStore.get(key) || 0;
+  inviteVerifyLimitStore.set(key, current + 1);
+  return current + 1;
+}
+
+function getInviteVerifyCount(ip) {
+  return inviteVerifyLimitStore.get(`verify:${ip}`) || 0;
+}
+
+/**
  * Clear all caches (for testing)
  */
 function clearCache() {
@@ -155,6 +213,8 @@ function clearCache() {
   cooldownStore?.clear();
   dailyLimitStore?.clear();
   ipLimitStore?.clear();
+  inviteTokenStore?.clear();
+  inviteVerifyLimitStore?.clear();
 }
 
 module.exports = {
@@ -175,4 +235,11 @@ module.exports = {
   // IP limit
   incrementIpLimit,
   getIpCount,
+  // Invite token
+  generateInviteToken,
+  getInviteToken,
+  consumeInviteToken,
+  // Invite verify rate limit
+  incrementInviteVerifyLimit,
+  getInviteVerifyCount,
 };

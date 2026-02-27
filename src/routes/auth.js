@@ -18,11 +18,22 @@ const validators = require('../utils/validators');
  * Send SMS verification code
  */
 async function sendSms(request, reply) {
-  const { phone, scene } = request.body;
+  const { phone, scene, invite_token } = request.body;
 
   // Validate scene
   if (!validators.isValidScene(scene)) {
     throw createError(ErrorCodes.INVALID_SCENE);
+  }
+
+  // For register scene, require and validate invite_token
+  if (scene === 'register') {
+    if (!invite_token) {
+      throw createError(ErrorCodes.INVITE_TOKEN_INVALID);
+    }
+    const tokenData = cache.getInviteToken(invite_token);
+    if (!tokenData) {
+      throw createError(ErrorCodes.INVITE_TOKEN_INVALID);
+    }
   }
 
   const db = getDb();
@@ -71,7 +82,19 @@ async function sendSms(request, reply) {
  * Register new user
  */
 async function register(request, reply) {
-  const { phone, code, invite_code, nickname } = request.body;
+  const { phone, code, invite_token, nickname } = request.body;
+
+  // Validate invite_token
+  if (!invite_token) {
+    throw createError(ErrorCodes.INVITE_TOKEN_INVALID);
+  }
+  const tokenData = cache.getInviteToken(invite_token);
+  if (!tokenData) {
+    throw createError(ErrorCodes.INVITE_TOKEN_INVALID);
+  }
+
+  // Get invite code from token
+  const invite_code = tokenData.code;
 
   // Validate inputs
   if (!validators.isValidPhone(phone)) {
@@ -80,10 +103,6 @@ async function register(request, reply) {
 
   if (!validators.isValidSmsCode(code)) {
     throw createError(ErrorCodes.INVALID_PARAMS, 'invalid verification code');
-  }
-
-  if (!validators.isValidInviteCode(invite_code)) {
-    throw createError(ErrorCodes.INVALID_PARAMS, 'invalid invite code format');
   }
 
   if (!validators.isValidNickname(nickname)) {
@@ -143,6 +162,9 @@ async function register(request, reply) {
   });
 
   transaction();
+
+  // Consume invite token
+  cache.consumeInviteToken(invite_token);
 
   // Get membership
   const membership = membershipService.getActiveMembership(userSub);
@@ -276,10 +298,55 @@ async function logout(request, reply) {
 }
 
 /**
+ * POST /auth/invite/verify
+ * Verify invite code and return invite token
+ */
+async function verifyInvite(request, reply) {
+  const { invite_code } = request.body;
+  const clientIp = request.ip;
+
+  // Rate limit: max 10 attempts per IP per minute
+  const verifyCount = cache.incrementInviteVerifyLimit(clientIp);
+  if (verifyCount > 10) {
+    throw createError(ErrorCodes.RATE_LIMITED, 'too many attempts, please try again later');
+  }
+
+  // Validate invite code format
+  if (!validators.isValidInviteCode(invite_code)) {
+    throw createError(ErrorCodes.INVITE_CODE_INVALID, 'invalid invite code format');
+  }
+
+  // Validate invite code
+  const invitation = invitationService.validateInvitationCode(invite_code);
+
+  // Generate invite token (valid for 30 minutes)
+  const inviteToken = cache.generateInviteToken(invite_code);
+
+  return reply.status(200).send({
+    success: true,
+    invite_token: inviteToken,
+    preset_membership: invitation.preset_membership,
+  });
+}
+
+/**
  * Register auth routes with Fastify instance
  * @param {FastifyInstance} fastify
  */
 function registerRoutes(fastify) {
+  // Invite verification (must be first, no auth required)
+  fastify.post('/auth/invite/verify', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['invite_code'],
+        properties: {
+          invite_code: { type: 'string' },
+        },
+      },
+    },
+  }, verifyInvite);
+
   fastify.post('/auth/sms/send', {
     schema: {
       body: {
@@ -288,6 +355,7 @@ function registerRoutes(fastify) {
         properties: {
           phone: { type: 'string' },
           scene: { type: 'string', enum: ['login', 'register'] },
+          invite_token: { type: 'string' },
         },
       },
     },
@@ -297,11 +365,11 @@ function registerRoutes(fastify) {
     schema: {
       body: {
         type: 'object',
-        required: ['phone', 'code', 'invite_code', 'nickname'],
+        required: ['phone', 'code', 'invite_token', 'nickname'],
         properties: {
           phone: { type: 'string' },
           code: { type: 'string' },
-          invite_code: { type: 'string' },
+          invite_token: { type: 'string' },
           nickname: { type: 'string', minLength: 1, maxLength: 50 },
         },
       },
@@ -343,4 +411,5 @@ module.exports = {
   login,
   refresh,
   logout,
+  verifyInvite,
 };

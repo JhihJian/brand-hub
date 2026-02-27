@@ -82,19 +82,34 @@ const api = {
   },
 
   // Auth APIs
-  async sendSmsCode(phone, scene) {
-    return this.request('auth/sms/send', {
+  async verifyInviteCode(invite_code) {
+    return this.request('auth/invite/verify', {
       method: 'POST',
-      body: JSON.stringify({ phone, scene }),
+      body: JSON.stringify({ invite_code }),
     });
   },
 
-  async register(phone, code, invite_code, nickname) {
+  async sendSmsCode(phone, scene, invite_token) {
+    const body = { phone, scene };
+    if (invite_token) {
+      body.invite_token = invite_token;
+    }
+    return this.request('auth/sms/send', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async register(phone, code, invite_token, nickname) {
     const data = await this.request('auth/register', {
       method: 'POST',
-      body: JSON.stringify({ phone, code, invite_code, nickname }),
+      body: JSON.stringify({ phone, code, invite_token, nickname }),
     });
     this.setTokensFromResponse(data);
+    // Clear invite token after successful registration
+    sessionStorage.removeItem('invite_token');
+    sessionStorage.removeItem('invite_code');
+    sessionStorage.removeItem('preset_membership');
     return data;
   },
 

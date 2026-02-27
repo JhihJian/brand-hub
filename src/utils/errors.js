@@ -43,6 +43,10 @@ const ErrorCodes = {
   SMS_COOLDOWN: { code: 'SMS_COOLDOWN', message: '60 秒冷却中', status: 429 },
   SMS_DAILY_LIMIT: { code: 'SMS_DAILY_LIMIT', message: '今日发送上限', status: 429 },
   SMS_IP_LIMIT: { code: 'SMS_IP_LIMIT', message: 'IP 发送频率超限', status: 429 },
+  RATE_LIMITED: { code: 'RATE_LIMITED', message: '请求过于频繁', status: 429 },
+
+  // Invite token errors
+  INVITE_TOKEN_INVALID: { code: 'INVITE_TOKEN_INVALID', message: '邀请凭证无效或已过期', status: 400 },
 };
 
 /**
