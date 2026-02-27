@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户管理 - 节物</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-brand">节物</div>
+      <div class="header-actions">
+        <span id="adminName" style="font-size: 12px; color: #888;"></span>
+      </div>
+    </header>
+
+    <main>
+      <div id="message" class="message hidden"></div>
+
+      <section class="section">
+        <h2 class="section-title">用户管理</h2>
+
+        <div class="form-row" style="margin-bottom: 16px;">
+          <input type="text" class="form-input" id="searchInput" placeholder="搜索手机号">
+          <button class="btn btn-small" id="searchBtn">搜索</button>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>手机</th>
+              <th>昵称</th>
+              <th>会员</th>
+              <th>状态</th>
+              <th>注册时间</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: #888;">加载中...</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination" id="pagination"></div>
+      </section>
+
+      <nav class="nav">
+        <a href="/admin/index.html" class="nav-link active">用户管理</a>
+        <a href="/admin/invitations.html" class="nav-link">邀请码管理</a>
+        <a href="/profile.html" class="nav-link">返回前台</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    (function() {
+      const messageEl = document.getElementById('message');
+      const adminNameEl = document.getElementById('adminName');
+      const searchInput = document.getElementById('searchInput');
+      const searchBtn = document.getElementById('searchBtn');
+      const tableBody = document.getElementById('userTableBody');
+      const paginationEl = document.getElementById('pagination');
+
+      let currentPage = 1;
+      let totalPages = 1;
+      const limit = 20;
+
+      function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'message message-' + type;
+        messageEl.classList.remove('hidden');
+      }
+
+      function maskPhone(phone) {
+        if (!phone || phone.length < 7) return phone;
+        return phone.slice(0, 3) + '****' + phone.slice(-4);
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('zh-CN');
+      }
+
+      function formatPlan(plan) {
+        const plans = {
+          'free': '免费',
+          'monthly': '月度',
+          'yearly': '年度',
+          'lifetime': '永久'
+        };
+        return plans[plan] || plan;
+      }
+
+      function statusTag(status) {
+        if (status === 'active') {
+          return '<span class="tag tag-success">正常</span>';
+        }
+        return '<span class="tag tag-warn">禁用</span>';
+      }
+
+      window.loadUsers = async function(page, search) {
+        const params = { page, limit };
+        if (search) {
+          params.search = search;
+        }
+
+        try {
+          const result = await api.getUsers(params);
+
+          if (result.items.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">暂无数据</td></tr>';
+          } else {
+            tableBody.innerHTML = result.items.map(function(user) {
+              return '<tr style="cursor: pointer;" onclick="window.location.href=\'/admin/user-detail.html?sub=' + user.sub + '\'">' +
+                '<td>' + maskPhone(user.phone) + '</td>' +
+                '<td>' + (user.nickname || '-') + '</td>' +
+                '<td><span class="tag">' + formatPlan(user.membership?.plan || 'free') + '</span></td>' +
+                '<td>' + statusTag(user.status) + '</td>' +
+                '<td>' + formatDate(user.created_at) + '</td>' +
+              '</tr>';
+            }).join('');
+          }
+
+          currentPage = result.page;
+          totalPages = Math.ceil(result.total / limit);
+          renderPagination();
+        } catch (error) {
+          showMessage(error.message || '加载失败', 'error');
+        }
+      };
+
+      function renderPagination() {
+        if (totalPages <= 1) {
+          paginationEl.innerHTML = '';
+          return;
+        }
+
+        let html = '';
+
+        if (currentPage > 1) {
+          html += '<button class="btn btn-small" onclick="loadUsers(' + (currentPage - 1) + ', searchInput.value)">上一页</button>';
+        }
+
+        html += '<span>第 ' + currentPage + '/' + totalPages + ' 页</span>';
+
+        if (currentPage < totalPages) {
+          html += '<button class="btn btn-small" onclick="loadUsers(' + (currentPage + 1) + ', searchInput.value)">下一页</button>';
+        }
+
+        paginationEl.innerHTML = html;
+      }
+
+      searchBtn.addEventListener('click', function() {
+        loadUsers(1, searchInput.value.trim());
+      });
+
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          loadUsers(1, searchInput.value.trim());
+        }
+      });
+
+      api.ensureAdmin().then(function(authed) {
+        if (authed) {
+          const user = api.getUserInfo();
+          adminNameEl.textContent = user?.nickname || 'admin';
+          loadUsers(1);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
