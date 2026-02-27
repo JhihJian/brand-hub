@@ -2,6 +2,8 @@
  * Fastify Application Setup
  */
 
+const path = require('path');
+
 const fastify = require('fastify')({
   logger: {
     level: process.env.LOG_LEVEL || 'info',
@@ -64,6 +66,17 @@ async function init() {
     origin: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  // Register static file serving
+  await fastify.register(require('@fastify/static'), {
+    root: path.join(__dirname, '..', 'public'),
+    prefix: '/',
+  });
+
+  // Redirect root to login or profile
+  fastify.get('/', async (request, reply) => {
+    return reply.redirect('/login.html');
   });
 
   // Set error handler
