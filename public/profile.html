@@ -11,6 +11,7 @@
     <header class="header">
       <div class="header-brand">节物</div>
       <div class="header-actions">
+        <a href="admin/" class="btn btn-link hidden" id="adminLink">管理面板</a>
         <button class="btn btn-link" id="logoutBtn">登出</button>
       </div>
     </header>
@@ -29,7 +30,7 @@
             <span class="data-label">昵称</span>
             <span class="data-value">
               <span id="nicknameDisplay">-</span>
-              <input type="text" class="form-input hidden" id="nicknameInput" style="width: 150px; display: inline-block;">
+              <input type="text" class="form-input hidden" id="nicknameInput" style="width: 150px;">
               <button class="btn btn-small" id="editNicknameBtn">修改</button>
               <button class="btn btn-small hidden" id="saveNicknameBtn">保存</button>
               <button class="btn btn-small btn-link hidden" id="cancelNicknameBtn">取消</button>
@@ -82,6 +83,7 @@
       const membershipExpiresEl = document.getElementById('membershipExpires');
       const membershipSourceEl = document.getElementById('membershipSource');
       const logoutBtn = document.getElementById('logoutBtn');
+      const adminLink = document.getElementById('adminLink');
 
       function showMessage(text, type) {
         messageEl.textContent = text;
@@ -123,6 +125,11 @@
           nicknameInputEl.value = user.nickname;
           rolesEl.textContent = user.roles ? user.roles.join(', ') : 'user';
           createdAtEl.textContent = formatDate(user.created_at);
+
+          // Show admin link for admin users
+          if (user.roles && user.roles.includes('admin')) {
+            adminLink.classList.remove('hidden');
+          }
 
           membershipPlanEl.textContent = formatPlan(user.membership?.plan || 'free');
           membershipExpiresEl.textContent = user.membership?.expires_at
@@ -179,7 +186,7 @@
 
       logoutBtn.addEventListener('click', async function() {
         await api.logout();
-        window.location.href = '/login.html';
+        window.location.href = 'login.html';
       });
 
       api.ensureAuth().then(function(authed) {

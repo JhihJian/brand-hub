@@ -19,7 +19,7 @@ const config = {
     privateKeyPath: process.env.JWT_PRIVATE_KEY_PATH || './keys/private.pem',
     publicKeyPath: process.env.JWT_PUBLIC_KEY_PATH || './keys/public.pem',
     issuer: process.env.JWT_ISSUER || 'https://yourbrand.com/hub',
-    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '12h',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
     audiences: process.env.JWT_AUDIENCES ? process.env.JWT_AUDIENCES.split(',').map(a => a.trim()) : ['brand-hub'],
   },
