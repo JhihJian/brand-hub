@@ -3,11 +3,13 @@
  */
 
 /**
- * Phone number validation (supports international format)
+ * Phone number validation (Chinese domestic or international format)
  */
 function isValidPhone(phone) {
-  // Basic validation: starts with + followed by digits, at least 10 digits total
   if (!phone || typeof phone !== 'string') return false;
+  // Chinese domestic: 11 digits starting with 1
+  if (/^1[3-9]\d{9}$/.test(phone)) return true;
+  // International: starts with + followed by digits, 10-15 digits total
   return /^\+\d{10,15}$/.test(phone);
 }
 
@@ -61,6 +63,14 @@ function isValidScene(scene) {
 }
 
 /**
+ * Password validation (6-100 characters)
+ */
+function isValidPassword(password) {
+  if (!password || typeof password !== 'string') return false;
+  return password.length >= 6 && password.length <= 100;
+}
+
+/**
  * Generate invite code
  */
 function generateInviteCode() {
@@ -88,6 +98,7 @@ module.exports = {
   isValidPlan,
   isValidStatus,
   isValidScene,
+  isValidPassword,
   generateInviteCode,
   generateSmsCode,
 };

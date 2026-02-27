@@ -12,6 +12,7 @@ const invitationService = require('../services/invitation');
 const membershipService = require('../services/membership');
 const { createError, ErrorCodes } = require('../utils/errors');
 const validators = require('../utils/validators');
+const passwordUtil = require('../utils/password');
 
 /**
  * POST /auth/sms/send
@@ -183,7 +184,7 @@ async function register(request, reply) {
     access_token: accessToken,
     refresh_token: refreshToken.token,
     token_type: 'Bearer',
-    expires_in: 900, // 15 minutes
+    expires_in: 43200, // 12 hours
     user: {
       sub: userSub,
       phone,
@@ -230,6 +231,79 @@ async function login(request, reply) {
   if (user.status === 'suspended') {
     throw createError(ErrorCodes.ACCOUNT_SUSPENDED);
   }
+
+  // Get membership
+  const membership = membershipService.getActiveMembership(user.sub);
+
+  // Generate tokens
+  const accessToken = tokenService.generateAccessToken(user, membership);
+  const refreshToken = await tokenService.generateRefreshToken(
+    user.sub,
+    request.headers['user-agent']
+  );
+
+  return reply.status(200).send({
+    access_token: accessToken,
+    refresh_token: refreshToken.token,
+    token_type: 'Bearer',
+    expires_in: 900,
+    user: {
+      sub: user.sub,
+      phone: user.phone,
+      nickname: user.nickname,
+      membership: membership?.plan || 'free',
+    },
+  });
+}
+
+/**
+ * POST /auth/login-password
+ * Login with phone and password
+ */
+async function loginPassword(request, reply) {
+  const { phone, password } = request.body;
+
+  // Validate inputs
+  if (!validators.isValidPhone(phone)) {
+    throw createError(ErrorCodes.INVALID_PARAMS, 'invalid phone number');
+  }
+
+  if (!validators.isValidPassword(password)) {
+    throw createError(ErrorCodes.INVALID_PARAMS, 'invalid password');
+  }
+
+  // Check if account is locked due to too many failed attempts
+  if (cache.isPasswordLocked(phone)) {
+    throw createError(ErrorCodes.RATE_LIMITED, 'too many failed attempts, please try again later');
+  }
+
+  const db = getDb();
+
+  // Find user
+  const user = db.prepare('SELECT * FROM users WHERE phone = ?').get(phone);
+  if (!user) {
+    // Use generic error message to prevent user enumeration
+    cache.incrementPasswordFailedAttempts(phone);
+    throw createError(ErrorCodes.INVALID_PARAMS, 'phone or password is incorrect');
+  }
+
+  // Check status
+  if (user.status === 'suspended') {
+    throw createError(ErrorCodes.ACCOUNT_SUSPENDED);
+  }
+
+  // Verify password
+  const isValid = await passwordUtil.verifyPassword(password, user.password_hash);
+  if (!isValid) {
+    const attempts = cache.incrementPasswordFailedAttempts(phone);
+    if (attempts >= 5) {
+      throw createError(ErrorCodes.RATE_LIMITED, 'too many failed attempts, please try again later');
+    }
+    throw createError(ErrorCodes.INVALID_PARAMS, 'phone or password is incorrect');
+  }
+
+  // Clear failed attempts on successful login
+  cache.clearPasswordFailedAttempts(phone);
 
   // Get membership
   const membership = membershipService.getActiveMembership(user.sub);
@@ -389,6 +463,19 @@ function registerRoutes(fastify) {
     },
   }, login);
 
+  fastify.post('/auth/login-password', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['phone', 'password'],
+        properties: {
+          phone: { type: 'string' },
+          password: { type: 'string', minLength: 6, maxLength: 100 },
+        },
+      },
+    },
+  }, loginPassword);
+
   fastify.post('/auth/refresh', {
     schema: {
       body: {
@@ -409,6 +496,7 @@ module.exports = {
   sendSms,
   register,
   login,
+  loginPassword,
   refresh,
   logout,
   verifyInvite,

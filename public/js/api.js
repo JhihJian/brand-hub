@@ -122,6 +122,15 @@ const api = {
     return data;
   },
 
+  async loginPassword(phone, password) {
+    const data = await this.request('auth/login-password', {
+      method: 'POST',
+      body: JSON.stringify({ phone, password }),
+    });
+    this.setTokensFromResponse(data);
+    return data;
+  },
+
   async refreshAccessToken() {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
@@ -176,22 +185,22 @@ const api = {
   // Admin APIs
   async getUsers(params = {}) {
     const query = new URLSearchParams(params).toString();
-    return this.request(`/admin/users?${query}`);
+    return this.request(`../admin/users?${query}`);
   },
 
   async getUser(sub) {
-    return this.request(`/admin/users/${sub}`);
+    return this.request(`../admin/users/${sub}`);
   },
 
   async updateUserStatus(sub, status) {
-    return this.request(`/admin/users/${sub}/status`, {
+    return this.request(`../admin/users/${sub}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });
   },
 
   async grantMembership(sub, plan, duration_days) {
-    return this.request(`/admin/users/${sub}/membership`, {
+    return this.request(`../admin/users/${sub}/membership`, {
       method: 'POST',
       body: JSON.stringify({ plan, duration_days }),
     });
@@ -199,11 +208,11 @@ const api = {
 
   async getInvitations(params = {}) {
     const query = new URLSearchParams(params).toString();
-    return this.request(`/admin/invitations?${query}`);
+    return this.request(`../admin/invitations?${query}`);
   },
 
   async createInvitations(data) {
-    return this.request('admin/invitations/batch', {
+    return this.request('../admin/invitations/batch', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -213,7 +222,7 @@ const api = {
   async ensureAuth() {
     const token = this.getRefreshToken();
     if (!token) {
-      window.location.href = '/login.html';
+      window.location.href = 'login.html';
       return false;
     }
 
@@ -222,7 +231,7 @@ const api = {
         await this.refreshAccessToken();
       } catch (e) {
         this.clearTokens();
-        window.location.href = '/login.html';
+        window.location.href = 'login.html';
         return false;
       }
     }
@@ -236,7 +245,7 @@ const api = {
 
     const user = this.getUserInfo();
     if (!user || !user.roles || !user.roles.includes('admin')) {
-      window.location.href = '/profile.html';
+      window.location.href = 'profile.html';
       return false;
     }
 

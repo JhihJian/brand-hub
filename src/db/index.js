@@ -41,6 +41,7 @@ function createTables() {
       sub TEXT PRIMARY KEY,
       phone TEXT UNIQUE NOT NULL,
       nickname TEXT NOT NULL,
+      password_hash TEXT,
       status TEXT DEFAULT 'active',
       roles TEXT DEFAULT 'user',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -127,6 +128,23 @@ function createTables() {
 
     CREATE INDEX IF NOT EXISTS idx_used_token_hashes_user_sub ON used_token_hashes(user_sub);
   `);
+
+  // Migration: Add password_hash column if it doesn't exist
+  runMigrations();
+}
+
+/**
+ * Run database migrations
+ */
+function runMigrations() {
+  // Check if password_hash column exists
+  const columns = db.prepare("PRAGMA table_info(users)").all();
+  const hasPasswordHash = columns.some(col => col.name === 'password_hash');
+
+  if (!hasPasswordHash) {
+    db.exec('ALTER TABLE users ADD COLUMN password_hash TEXT');
+    console.log('Migration: Added password_hash column to users table');
+  }
 }
 
 /**
@@ -188,4 +206,5 @@ module.exports = {
   getDb,
   closeDatabase,
   runSeed,
+  runMigrations,
 };

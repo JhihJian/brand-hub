@@ -13,6 +13,7 @@ let dailyLimitStore = null;
 let ipLimitStore = null;
 let inviteTokenStore = null;
 let inviteVerifyLimitStore = null;
+let passwordFailedAttemptsStore = null;
 
 /**
  * Initialize all cache stores
@@ -54,6 +55,12 @@ function initCache() {
   inviteVerifyLimitStore = new LRUCache({
     ...cacheOptions,
     ttl: 60000, // 1 minute
+  });
+
+  // Password failed attempts store: 15 minutes TTL
+  passwordFailedAttemptsStore = new LRUCache({
+    ...cacheOptions,
+    ttl: 900000, // 15 minutes
   });
 }
 
@@ -206,6 +213,28 @@ function getInviteVerifyCount(ip) {
 }
 
 /**
+ * Password failed attempts operations
+ */
+function getPasswordFailedAttempts(phone) {
+  return passwordFailedAttemptsStore.get(`pwd_failed:${phone}`) || 0;
+}
+
+function incrementPasswordFailedAttempts(phone) {
+  const key = `pwd_failed:${phone}`;
+  const current = passwordFailedAttemptsStore.get(key) || 0;
+  passwordFailedAttemptsStore.set(key, current + 1);
+  return current + 1;
+}
+
+function clearPasswordFailedAttempts(phone) {
+  passwordFailedAttemptsStore.delete(`pwd_failed:${phone}`);
+}
+
+function isPasswordLocked(phone) {
+  return getPasswordFailedAttempts(phone) >= 5;
+}
+
+/**
  * Clear all caches (for testing)
  */
 function clearCache() {
@@ -215,6 +244,7 @@ function clearCache() {
   ipLimitStore?.clear();
   inviteTokenStore?.clear();
   inviteVerifyLimitStore?.clear();
+  passwordFailedAttemptsStore?.clear();
 }
 
 module.exports = {
@@ -242,4 +272,9 @@ module.exports = {
   // Invite verify rate limit
   incrementInviteVerifyLimit,
   getInviteVerifyCount,
+  // Password failed attempts
+  getPasswordFailedAttempts,
+  incrementPasswordFailedAttempts,
+  clearPasswordFailedAttempts,
+  isPasswordLocked,
 };
