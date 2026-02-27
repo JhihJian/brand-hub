@@ -73,6 +73,12 @@ const api = {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
+      // 如果请求携带了 token 但返回 401，说明 token 过期/失效，跳转到 401 页面
+      if (response.status === 401 && token) {
+        this.clearTokens();
+        window.location.href = '401.html';
+        throw new Error('Unauthorized');
+      }
       const errorMsg = data.error?.message || data.message || 'Request failed';
       const error = new Error(errorMsg);
       error.code = data.error?.code || data.code;
@@ -229,7 +235,7 @@ const api = {
   async ensureAuth() {
     const token = this.getRefreshToken();
     if (!token) {
-      window.location.href = 'login.html';
+      window.location.href = '401.html';
       return false;
     }
 
@@ -238,7 +244,7 @@ const api = {
         await this.refreshAccessToken();
       } catch (e) {
         this.clearTokens();
-        window.location.href = 'login.html';
+        window.location.href = '401.html';
         return false;
       }
     }
