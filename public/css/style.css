@@ -1,0 +1,377 @@
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Typography */
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+  color: #1a1a1a;
+  background: #ffffff;
+  line-height: 1.6;
+}
+
+/* Color System */
+:root {
+  /* Text levels */
+  --text-l1: #1a1a1a;
+  --text-l2: #555555;
+  --text-l3: #666666;
+  --text-l4: #888888;
+  --text-l5: #999999;
+  --text-l6: #aaaaaa;
+  --text-l7: #bbbbbb;
+  --text-l8: #cccccc;
+
+  /* Borders */
+  --border-primary: #1a1a1a;
+  --border-secondary: #eeeeee;
+  --border-micro: #f5f5f5;
+
+  /* Semantic colors */
+  --warn-border: #d4b8b8;
+  --warn-text: #8a5a5a;
+  --info-border: #b8c8d4;
+  --info-text: #5a6a8a;
+  --success-border: #b8d4b8;
+  --success-text: #5a8a5a;
+}
+
+/* Layout */
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-primary);
+  margin-bottom: 28px;
+}
+
+.header-brand {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 4px;
+  color: var(--text-l5);
+  text-transform: uppercase;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Section */
+.section {
+  margin-bottom: 28px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-l5);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-secondary);
+  margin-bottom: 12px;
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-l5);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid var(--border-secondary);
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.form-input:focus {
+  border-color: var(--text-l3);
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row .form-input {
+  flex: 1;
+}
+
+.form-row .btn {
+  flex-shrink: 0;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 1px;
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--text-l1);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: var(--text-l1);
+  color: #fff;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--text-l1);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--text-l2);
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--text-l3);
+  text-decoration: underline;
+}
+
+.btn-link:hover {
+  color: var(--text-l1);
+  background: none;
+}
+
+/* Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: var(--text-l5);
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-micro);
+  color: var(--text-l2);
+}
+
+.table td:first-child {
+  font-weight: 500;
+  color: var(--text-l1);
+}
+
+/* Data list */
+.data-list {
+  font-size: 14px;
+}
+
+.data-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-micro);
+}
+
+.data-label {
+  color: var(--text-l5);
+  font-size: 12px;
+}
+
+.data-value {
+  color: var(--text-l2);
+}
+
+/* Tags */
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border: 1px solid var(--border-secondary);
+  border-radius: 2px;
+  color: var(--text-l4);
+}
+
+.tag-success {
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
+.tag-warn {
+  border-color: var(--warn-border);
+  color: var(--warn-text);
+}
+
+.tag-info {
+  border-color: var(--info-border);
+  color: var(--info-text);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--text-l4);
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-secondary);
+}
+
+.nav-link {
+  font-size: 12px;
+  color: var(--text-l4);
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--text-l1);
+}
+
+/* Message */
+.message {
+  padding: 12px 16px;
+  border-radius: 2px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.message-error {
+  border-left: 3px solid var(--warn-border);
+  background: #fdf8f6;
+  color: var(--warn-text);
+}
+
+.message-success {
+  border-left: 3px solid var(--success-border);
+  background: #f6fdf6;
+  color: var(--success-text);
+}
+
+/* Links */
+.link {
+  font-size: 13px;
+  color: var(--text-l4);
+  text-align: center;
+  margin-top: 20px;
+}
+
+.link a {
+  color: var(--text-l2);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  padding: 24px;
+  border-radius: 2px;
+  max-width: 400px;
+  width: 100%;
+}
+
+.modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .container {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 430px) {
+  .container {
+    padding: 16px;
+  }
+}
