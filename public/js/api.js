@@ -82,14 +82,14 @@ const api = {
 
   // Auth APIs
   async sendSmsCode(phone, scene) {
-    return this.request('/auth/sms/send', {
+    return this.request('auth/sms/send', {
       method: 'POST',
       body: JSON.stringify({ phone, scene }),
     });
   },
 
   async register(phone, code, invite_code, nickname) {
-    const data = await this.request('/auth/register', {
+    const data = await this.request('auth/register', {
       method: 'POST',
       body: JSON.stringify({ phone, code, invite_code, nickname }),
     });
@@ -98,7 +98,7 @@ const api = {
   },
 
   async login(phone, code) {
-    const data = await this.request('/auth/login', {
+    const data = await this.request('auth/login', {
       method: 'POST',
       body: JSON.stringify({ phone, code }),
     });
@@ -112,7 +112,7 @@ const api = {
       throw new Error('No refresh token');
     }
 
-    const data = await this.request('/auth/refresh', {
+    const data = await this.request('auth/refresh', {
       method: 'POST',
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
@@ -126,7 +126,7 @@ const api = {
     const refreshToken = this.getRefreshToken();
     if (refreshToken) {
       try {
-        await this.request('/auth/logout', {
+        await this.request('auth/logout', {
           method: 'POST',
           body: JSON.stringify({ refresh_token: refreshToken }),
         });
@@ -147,11 +147,11 @@ const api = {
 
   // User APIs
   async getMe() {
-    return this.request('/users/me');
+    return this.request('users/me');
   },
 
   async updateMe(nickname) {
-    return this.request('/users/me', {
+    return this.request('users/me', {
       method: 'PATCH',
       body: JSON.stringify({ nickname }),
     });
@@ -187,7 +187,7 @@ const api = {
   },
 
   async createInvitations(data) {
-    return this.request('/admin/invitations/batch', {
+    return this.request('admin/invitations/batch', {
       method: 'POST',
       body: JSON.stringify(data),
     });
