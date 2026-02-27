@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户详情 - 节物</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-brand">节物</div>
+      <div class="header-actions">
+        <span id="adminName" style="font-size: 12px; color: #888;"></span>
+      </div>
+    </header>
+
+    <main>
+      <div id="message" class="message hidden"></div>
+
+      <div style="margin-bottom: 20px;">
+        <button class="btn btn-link" onclick="window.location.href='/admin/index.html'">← 返回列表</button>
+      </div>
+
+      <section class="section">
+        <h2 class="section-title">用户信息</h2>
+        <div class="data-list">
+          <div class="data-row">
+            <span class="data-label">手机</span>
+            <span class="data-value" id="phone">-</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">昵称</span>
+            <span class="data-value" id="nickname">-</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">角色</span>
+            <span class="data-value" id="roles">-</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">状态</span>
+            <span class="data-value">
+              <span id="statusTag">-</span>
+              <button class="btn btn-small" id="toggleStatusBtn">禁用</button>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">邀请码信息</h2>
+        <div class="data-list" id="invitationInfo">
+          <div class="data-row">
+            <span class="data-label">邀请码</span>
+            <span class="data-value">-</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">会员记录</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>等级</th>
+              <th>状态</th>
+              <th>开始时间</th>
+              <th>到期时间</th>
+              <th>来源</th>
+            </tr>
+          </thead>
+          <tbody id="membershipTableBody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: #888;">加载中...</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <button class="btn" id="grantMembershipBtn">授予会员</button>
+      </section>
+    </main>
+  </div>
+
+  <!-- Grant Modal -->
+  <div class="modal-overlay hidden" id="grantModal">
+    <div class="modal">
+      <h3 class="modal-title">授予会员</h3>
+      <div class="form-group">
+        <label class="form-label">会员等级</label>
+        <select class="form-input" id="grantPlan">
+          <option value="monthly">月度会员</option>
+          <option value="yearly">年度会员</option>
+          <option value="lifetime">永久会员</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">有效天数</label>
+        <input type="number" class="form-input" id="grantDays" placeholder="留空则按等级默认">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-small btn-link" id="cancelGrantBtn">取消</button>
+        <button class="btn btn-small" id="confirmGrantBtn">授予</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const userSub = params.get('sub');
+
+      if (!userSub) {
+        window.location.href = '/admin/index.html';
+        return;
+      }
+
+      const messageEl = document.getElementById('message');
+      const adminNameEl = document.getElementById('adminName');
+      const phoneEl = document.getElementById('phone');
+      const nicknameEl = document.getElementById('nickname');
+      const rolesEl = document.getElementById('roles');
+      const statusTagEl = document.getElementById('statusTag');
+      const toggleStatusBtn = document.getElementById('toggleStatusBtn');
+      const invitationInfoEl = document.getElementById('invitationInfo');
+      const membershipTableBody = document.getElementById('membershipTableBody');
+      const grantMembershipBtn = document.getElementById('grantMembershipBtn');
+      const grantModal = document.getElementById('grantModal');
+      const cancelGrantBtn = document.getElementById('cancelGrantBtn');
+      const confirmGrantBtn = document.getElementById('confirmGrantBtn');
+
+      let currentUser = null;
+
+      function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'message message-' + type;
+        messageEl.classList.remove('hidden');
+      }
+
+      function hideMessage() {
+        messageEl.classList.add('hidden');
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('zh-CN');
+      }
+
+      function formatPlan(plan) {
+        const plans = {
+          'free': '免费',
+          'monthly': '月度会员',
+          'yearly': '年度会员',
+          'lifetime': '永久会员'
+        };
+        return plans[plan] || plan;
+      }
+
+      function statusTag(status) {
+        if (status === 'active') {
+          return '<span class="tag tag-success">正常</span>';
+        }
+        return '<span class="tag tag-warn">禁用</span>';
+      }
+
+      async function loadUser() {
+        try {
+          currentUser = await api.getUser(userSub);
+
+          phoneEl.textContent = currentUser.phone;
+          nicknameEl.textContent = currentUser.nickname || '-';
+          rolesEl.textContent = currentUser.roles ? currentUser.roles.join(', ') : 'user';
+          statusTagEl.innerHTML = statusTag(currentUser.status);
+          toggleStatusBtn.textContent = currentUser.status === 'active' ? '禁用' : '启用';
+
+          if (currentUser.invitation) {
+            invitationInfoEl.innerHTML =
+              '<div class="data-row"><span class="data-label">邀请码</span><span class="data-value" style="font-family: monospace;">' + currentUser.invitation.code + '</span></div>' +
+              '<div class="data-row"><span class="data-label">预设会员</span><span class="data-value">' + formatPlan(currentUser.invitation.preset_membership) + '</span></div>' +
+              '<div class="data-row"><span class="data-label">使用时间</span><span class="data-value">' + formatDate(currentUser.invitation.used_at) + '</span></div>';
+          } else {
+            invitationInfoEl.innerHTML = '<div class="data-row"><span class="data-label">邀请码</span><span class="data-value">-</span></div>';
+          }
+
+          if (currentUser.memberships && currentUser.memberships.length > 0) {
+            membershipTableBody.innerHTML = currentUser.memberships.map(function(m) {
+              return '<tr>' +
+                '<td>' + formatPlan(m.plan) + '</td>' +
+                '<td>' + statusTag(m.status) + '</td>' +
+                '<td>' + formatDate(m.starts_at) + '</td>' +
+                '<td>' + (m.plan === 'lifetime' ? '永久' : formatDate(m.expires_at)) + '</td>' +
+                '<td>' + (m.source || '-') + '</td>' +
+              '</tr>';
+            }).join('');
+          } else {
+            membershipTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">暂无记录</td></tr>';
+          }
+        } catch (error) {
+          showMessage(error.message || '加载失败', 'error');
+        }
+      }
+
+      toggleStatusBtn.addEventListener('click', async function() {
+        if (!currentUser) return;
+
+        const newStatus = currentUser.status === 'active' ? 'suspended' : 'active';
+
+        try {
+          await api.updateUserStatus(userSub, newStatus);
+          currentUser.status = newStatus;
+          statusTagEl.innerHTML = statusTag(newStatus);
+          toggleStatusBtn.textContent = newStatus === 'active' ? '禁用' : '启用';
+          showMessage('状态已更新', 'success');
+          setTimeout(hideMessage, 2000);
+        } catch (error) {
+          showMessage(error.message || '更新失败', 'error');
+        }
+      });
+
+      grantMembershipBtn.addEventListener('click', function() {
+        grantModal.classList.remove('hidden');
+      });
+
+      cancelGrantBtn.addEventListener('click', function() {
+        grantModal.classList.add('hidden');
+      });
+
+      confirmGrantBtn.addEventListener('click', async function() {
+        const plan = document.getElementById('grantPlan').value;
+        const days = document.getElementById('grantDays').value;
+
+        try {
+          await api.grantMembership(userSub, plan, days ? parseInt(days, 10) : undefined);
+          grantModal.classList.add('hidden');
+          showMessage('会员已授予', 'success');
+          setTimeout(hideMessage, 2000);
+          loadUser();
+        } catch (error) {
+          showMessage(error.message || '授予失败', 'error');
+        }
+      });
+
+      api.ensureAdmin().then(function(authed) {
+        if (authed) {
+          const user = api.getUserInfo();
+          adminNameEl.textContent = user?.nickname || 'admin';
+          loadUser();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
