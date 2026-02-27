@@ -34,6 +34,8 @@ const api = {
     sessionStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     sessionStorage.removeItem('user_info');
+    // 清除 cookie
+    document.cookie = 'brand_hub_token=; path=/; max-age=0';
   },
 
   // User info
@@ -167,6 +169,11 @@ const api = {
     this.setRefreshToken(data.refresh_token);
     if (data.user) {
       this.setUserInfo(data.user);
+    }
+    // 写入 cookie 供同源下的其他应用（如 eat-healthy）读取
+    if (data.access_token) {
+      const maxAge = 30 * 24 * 60 * 60; // 30 days
+      document.cookie = `brand_hub_token=${data.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`;
     }
   },
 
