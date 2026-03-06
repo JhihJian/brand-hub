@@ -154,6 +154,8 @@ curl http://localhost:3000/.well-known/jwks.json
 
 ## 部署
 
+> 详细部署指南请参考 [DEPLOY.md](./DEPLOY.md)
+
 ### Docker Compose
 
 ```bash

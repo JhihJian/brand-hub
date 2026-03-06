@@ -6,6 +6,9 @@ node_modules/
 .env.local
 .env.*.local
 
+# PM2 Production Config (contains secrets)
+ecosystem.config.cjs
+
 # Data
 data/
 *.db

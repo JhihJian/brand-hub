@@ -22,6 +22,7 @@
   "type": "commonjs",
   "dependencies": {
     "@fastify/cors": "^11.2.0",
+    "@fastify/http-proxy": "^11.4.1",
     "@fastify/static": "^9.0.0",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.6.2",

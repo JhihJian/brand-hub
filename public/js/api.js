@@ -2,7 +2,7 @@
  * API Client for Brand Hub
  */
 
-const API_BASE = '';
+const API_BASE = '/hub/';
 
 const api = {
   // Token management
@@ -150,8 +150,7 @@ const api = {
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
 
-    this.setAccessToken(data.access_token);
-    this.setRefreshToken(data.refresh_token);
+    this.setTokensFromResponse(data);
     return data;
   },
 
@@ -198,22 +197,22 @@ const api = {
   // Admin APIs
   async getUsers(params = {}) {
     const query = new URLSearchParams(params).toString();
-    return this.request(`../admin/users?${query}`);
+    return this.request(`admin/users?${query}`);
   },
 
   async getUser(sub) {
-    return this.request(`../admin/users/${sub}`);
+    return this.request(`admin/users/${sub}`);
   },
 
   async updateUserStatus(sub, status) {
-    return this.request(`../admin/users/${sub}/status`, {
+    return this.request(`admin/users/${sub}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });
   },
 
   async grantMembership(sub, plan, duration_days) {
-    return this.request(`../admin/users/${sub}/membership`, {
+    return this.request(`admin/users/${sub}/membership`, {
       method: 'POST',
       body: JSON.stringify({ plan, duration_days }),
     });
@@ -221,11 +220,11 @@ const api = {
 
   async getInvitations(params = {}) {
     const query = new URLSearchParams(params).toString();
-    return this.request(`../admin/invitations?${query}`);
+    return this.request(`admin/invitations?${query}`);
   },
 
   async createInvitations(data) {
-    return this.request('../admin/invitations/batch', {
+    return this.request('admin/invitations/batch', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -256,13 +255,18 @@ const api = {
     const authed = await this.ensureAuth();
     if (!authed) return false;
 
-    const user = this.getUserInfo();
-    if (!user || !user.roles || !user.roles.includes('admin')) {
+    // 从 API 获取最新用户信息，确保有 roles 数据
+    try {
+      const user = await this.getMe();
+      if (!user || !user.roles || !user.roles.includes('admin')) {
+        window.location.href = 'profile.html';
+        return false;
+      }
+      return true;
+    } catch (error) {
       window.location.href = 'profile.html';
       return false;
     }
-
-    return true;
   },
 };
 

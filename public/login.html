@@ -5,40 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>登录 - 节物</title>
   <link rel="stylesheet" href="css/style.css">
-  <style>
-    .login-tabs {
-      display: flex;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    .login-tab {
-      flex: 1;
-      padding: 12px 0;
-      text-align: center;
-      cursor: pointer;
-      color: #666;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-      background: none;
-      border-top: none;
-      border-left: none;
-      border-right: none;
-      font-size: 15px;
-    }
-    .login-tab:hover {
-      color: #333;
-    }
-    .login-tab.active {
-      color: #007bff;
-      border-bottom-color: #007bff;
-    }
-    .login-form-container {
-      display: none;
-    }
-    .login-form-container.active {
-      display: block;
-    }
-  </style>
 </head>
 <body>
   <div class="container">
@@ -122,6 +88,10 @@
 
       let countdown = 0;
 
+      // 解析 redirect 参数
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectUrl = urlParams.get('redirect') || 'profile.html';
+
       function showMessage(text, type) {
         messageEl.textContent = text;
         messageEl.className = 'message message-' + type;
@@ -165,7 +135,7 @@
 
         try {
           const result = await api.loginPassword(phone, password);
-          window.location.href = 'profile.html';
+          window.location.href = redirectUrl;
         } catch (error) {
           showMessage(error.message || '登录失败', 'error');
         }
@@ -224,7 +194,7 @@
 
         try {
           const result = await api.login(phone, code);
-          window.location.href = 'profile.html';
+          window.location.href = redirectUrl;
         } catch (error) {
           showMessage(error.message || '登录失败', 'error');
         }
@@ -232,7 +202,7 @@
 
       // Redirect if already logged in
       if (api.getRefreshToken()) {
-        window.location.href = 'profile.html';
+        window.location.href = redirectUrl;
       }
     })();
   </script>

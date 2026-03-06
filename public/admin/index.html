@@ -11,7 +11,7 @@
     <header class="header">
       <div class="header-brand">节物</div>
       <div class="header-actions">
-        <span id="adminName" style="font-size: 12px; color: #888;"></span>
+        <span id="adminName" class="admin-name"></span>
       </div>
     </header>
 
@@ -21,7 +21,7 @@
       <section class="section">
         <h2 class="section-title">用户管理</h2>
 
-        <div class="form-row" style="margin-bottom: 16px;">
+        <div class="form-group">
           <input type="text" class="form-input" id="searchInput" placeholder="搜索手机号">
           <button class="btn btn-small" id="searchBtn">搜索</button>
         </div>
@@ -38,7 +38,7 @@
           </thead>
           <tbody id="userTableBody">
             <tr>
-              <td colspan="5" style="text-align: center; color: #888;">加载中...</td>
+              <td colspan="5" class="text-center text-muted">加载中...</td>
             </tr>
           </tbody>
         </table>
@@ -112,10 +112,10 @@
           const result = await api.getUsers(params);
 
           if (result.items.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">暂无数据</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">暂无数据</td></tr>';
           } else {
             tableBody.innerHTML = result.items.map(function(user) {
-              return '<tr style="cursor: pointer;" onclick="window.location.href=\'user-detail.html?sub=' + user.sub + '\'">' +
+              return '<tr class="cursor-pointer" onclick="window.location.href=\'user-detail.html?sub=' + user.sub + '\'">' +
                 '<td>' + maskPhone(user.phone) + '</td>' +
                 '<td>' + (user.nickname || '-') + '</td>' +
                 '<td><span class="tag">' + formatPlan(user.membership?.plan || 'free') + '</span></td>' +

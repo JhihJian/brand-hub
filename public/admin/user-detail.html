@@ -11,14 +11,14 @@
     <header class="header">
       <div class="header-brand">节物</div>
       <div class="header-actions">
-        <span id="adminName" style="font-size: 12px; color: #888;"></span>
+        <span id="adminName" class="admin-name"></span>
       </div>
     </header>
 
     <main>
       <div id="message" class="message hidden"></div>
 
-      <div style="margin-bottom: 20px;">
+      <div class="form-group">
         <button class="btn btn-link" onclick="window.location.href='index.html'">← 返回列表</button>
       </div>
 
@@ -71,7 +71,7 @@
           </thead>
           <tbody id="membershipTableBody">
             <tr>
-              <td colspan="5" style="text-align: center; color: #888;">加载中...</td>
+              <td colspan="5" class="text-center text-muted">加载中...</td>
             </tr>
           </tbody>
         </table>
@@ -178,7 +178,7 @@
 
           if (currentUser.invitation) {
             invitationInfoEl.innerHTML =
-              '<div class="data-row"><span class="data-label">邀请码</span><span class="data-value" style="font-family: monospace;">' + currentUser.invitation.code + '</span></div>' +
+              '<div class="data-row"><span class="data-label">邀请码</span><span class="data-value font-mono">' + currentUser.invitation.code + '</span></div>' +
               '<div class="data-row"><span class="data-label">预设会员</span><span class="data-value">' + formatPlan(currentUser.invitation.preset_membership) + '</span></div>' +
               '<div class="data-row"><span class="data-label">使用时间</span><span class="data-value">' + formatDate(currentUser.invitation.used_at) + '</span></div>';
           } else {
@@ -196,7 +196,7 @@
               '</tr>';
             }).join('');
           } else {
-            membershipTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">暂无记录</td></tr>';
+            membershipTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">暂无记录</td></tr>';
           }
         } catch (error) {
           showMessage(error.message || '加载失败', 'error');

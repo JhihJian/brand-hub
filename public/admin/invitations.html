@@ -11,7 +11,7 @@
     <header class="header">
       <div class="header-brand">节物</div>
       <div class="header-actions">
-        <span id="adminName" style="font-size: 12px; color: #888;"></span>
+        <span id="adminName" class="admin-name"></span>
       </div>
     </header>
 
@@ -21,22 +21,24 @@
       <section class="section">
         <h2 class="section-title">邀请码管理</h2>
 
-        <div style="margin-bottom: 16px;">
+        <div class="form-group">
           <button class="btn" id="createBtn">批量生成</button>
         </div>
 
-        <div class="form-row" style="margin-bottom: 16px;">
-          <select class="form-input" id="statusFilter" style="max-width: 150px;">
-            <option value="">全部状态</option>
-            <option value="unused">未使用</option>
-            <option value="used">已使用</option>
-          </select>
-          <select class="form-input" id="channelFilter" style="max-width: 150px;">
-            <option value="">全部渠道</option>
-            <option value="web">web</option>
-            <option value="app">app</option>
-            <option value="admin">admin</option>
-          </select>
+        <div class="form-group">
+          <div class="form-row">
+            <select class="form-input max-w-150" id="statusFilter">
+              <option value="">全部状态</option>
+              <option value="unused">未使用</option>
+              <option value="used">已使用</option>
+            </select>
+            <select class="form-input max-w-150" id="channelFilter">
+              <option value="">全部渠道</option>
+              <option value="web">web</option>
+              <option value="app">app</option>
+              <option value="admin">admin</option>
+            </select>
+          </div>
         </div>
 
         <table class="table">
@@ -51,7 +53,7 @@
           </thead>
           <tbody id="invitationTableBody">
             <tr>
-              <td colspan="5" style="text-align: center; color: #888;">加载中...</td>
+              <td colspan="5" class="text-center text-muted">加载中...</td>
             </tr>
           </tbody>
         </table>
@@ -163,11 +165,11 @@
           const result = await api.getInvitations(params);
 
           if (result.items.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">暂无数据</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">暂无数据</td></tr>';
           } else {
             tableBody.innerHTML = result.items.map(function(inv) {
               return '<tr>' +
-                '<td style="font-family: monospace;">' + inv.code + '</td>' +
+                '<td class="font-mono">' + inv.code + '</td>' +
                 '<td>' + (inv.channel || '-') + '</td>' +
                 '<td>' + formatPlan(inv.preset_membership) + '</td>' +
                 '<td>' + statusTag(inv.status) + '</td>' +

@@ -1,200 +1,1096 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>个人信息 - 节物</title>
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>节物 · 会员</title>
+    <link rel="stylesheet" href="css/fonts.css">
+    <style>
+        :root {
+            --font-main: 'Noto Serif SC', serif;
+            --paper: #f8f6f1;
+            --paper-warm: #f5f2eb;
+            --ink-full: #1a1714;
+            --ink-deep: #3d3632;
+            --ink-mid: #6b625a;
+            --ink-light: #9a8f84;
+            --ink-wash: #d9d2c9;
+            --accent-vermilion: #a63d3d;
+            --space-xs: 8px;
+            --space-sm: 16px;
+            --space-md: 24px;
+            --space-lg: 48px;
+            --space-xl: 72px;
+            --space-xxl: 120px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--paper);
+            color: var(--ink-deep);
+            line-height: 2;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: 0.05em;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(0,0,0,0.02) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 0 var(--space-md);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 品牌边注 */
+        .brand-spine {
+            position: fixed;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-spine-content {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            font-family: var(--font-main);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .spine-title {
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--ink-full);
+            letter-spacing: 0.4em;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--ink-light);
+        }
+
+        .spine-line {
+            width: 1px;
+            height: 36px;
+            background: var(--ink-light);
+            opacity: 0.6;
+        }
+
+        .spine-text {
+            font-size: 11px;
+            color: var(--ink-mid);
+            letter-spacing: 0.3em;
+            line-height: 2;
+            opacity: 0.8;
+        }
+
+        /* 导航 */
+        .nav-header {
+            padding-top: var(--space-sm);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--ink-wash);
+            opacity: 0;
+            animation: fadeIn 1s ease 0.2s forwards;
+        }
+
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .brand {
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--ink-full);
+            text-decoration: none;
+            letter-spacing: 0.2em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-md);
+            align-items: baseline;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            font-weight: 300;
+            color: var(--ink-mid);
+            text-decoration: none;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+        .nav-links a:hover { color: var(--ink-full); }
+        .nav-links a.active { color: var(--ink-full); }
+
+        /* 用户信息 - 无头像 */
+        .user-header {
+            margin-top: var(--space-lg);
+            margin-bottom: var(--space-md);
+            text-align: center;
+            opacity: 0;
+            animation: fadeUp 1s ease 0.4s forwards;
+        }
+
+        .user-name {
+            font-size: 32px;
+            font-weight: 400;
+            letter-spacing: 0.5em;
+            color: var(--ink-full);
+            margin-left: 0.5em;
+            line-height: 1.6;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-name .edit-btn {
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            color: var(--ink-light);
+            cursor: pointer;
+            font-weight: 300;
+            transition: color 0.3s;
+        }
+
+        .user-name .edit-btn:hover {
+            color: var(--accent-vermilion);
+        }
+
+        .user-name-input {
+            font-family: var(--font-main);
+            font-size: 32px;
+            font-weight: 400;
+            letter-spacing: 0.5em;
+            color: var(--ink-full);
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--ink-mid);
+            outline: none;
+            text-align: center;
+            width: 200px;
+        }
+
+        .user-name-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .user-name-actions button {
+            font-family: var(--font-main);
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            padding: 6px 16px;
+            border: 1px solid var(--ink-light);
+            background: transparent;
+            color: var(--ink-mid);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-name-actions button:hover {
+            border-color: var(--accent-vermilion);
+            color: var(--accent-vermilion);
+        }
+
+        .user-name-actions button.save-btn:hover {
+            background: var(--accent-vermilion);
+            color: var(--paper);
+        }
+
+        .user-meta {
+            margin-top: var(--space-sm);
+            display: flex;
+            justify-content: center;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+            font-size: 12px;
+            letter-spacing: 0.2em;
+            color: var(--ink-mid);
+        }
+
+        .user-meta span {
+            color: var(--ink-deep);
+            font-weight: 400;
+        }
+
+        /* 消息提示 */
+        .message {
+            text-align: center;
+            padding: var(--space-sm);
+            margin-bottom: var(--space-md);
+            font-size: 13px;
+            letter-spacing: 0.1em;
+        }
+
+        .message-success {
+            color: var(--ink-deep);
+            background: rgba(0,0,0,0.02);
+        }
+
+        .message-error {
+            color: var(--accent-vermilion);
+            background: rgba(166, 61, 61, 0.05);
+        }
+
+        .hidden { display: none !important; }
+
+        /* 分隔线 */
+        .divider {
+            width: 1px;
+            height: 48px;
+            background: var(--ink-light);
+            margin: var(--space-lg) auto;
+            opacity: 0;
+            animation: growDown 0.8s ease 0.6s forwards;
+        }
+
+        /* 出品区域 */
+        .products-section {
+            margin-bottom: var(--space-xl);
+            opacity: 0;
+            animation: fadeUp 1s ease 0.8s forwards;
+        }
+
+        .section-label {
+            font-size: 11px;
+            letter-spacing: 0.5em;
+            color: var(--ink-mid);
+            text-align: center;
+            margin-bottom: var(--space-md);
+        }
+
+        .product-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .product-card {
+            position: relative;
+            padding: var(--space-md);
+            border: 1px solid var(--ink-wash);
+            border-radius: 2px;
+            background: rgba(255,255,255,0.4);
+            transition: all 0.4s ease;
+            cursor: default;
+        }
+
+        .product-card.active {
+            cursor: pointer;
+            border-color: var(--ink-light);
+        }
+
+        .product-card.active:hover {
+            background: rgba(255,255,255,0.8);
+            border-color: var(--ink-mid);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            transform: translateY(-2px);
+        }
+
+        .product-card.pending {
+            opacity: 0.6;
+            border-style: dashed;
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: var(--space-xs);
+        }
+
+        .product-name {
+            font-size: 20px;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            color: var(--ink-full);
+            margin-left: 0.3em;
+        }
+
+        .product-status {
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            padding: 2px 10px;
+            border: 1px solid var(--ink-light);
+            color: var(--ink-mid);
+            border-radius: 1px;
+        }
+
+        .product-card.active .product-status {
+            border-color: var(--ink-mid);
+            color: var(--ink-deep);
+            background: rgba(0,0,0,0.02);
+        }
+
+        .product-desc {
+            font-size: 13px;
+            color: var(--ink-mid);
+            line-height: 1.8;
+            margin-bottom: var(--space-sm);
+        }
+
+        .product-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            color: var(--ink-deep);
+            text-decoration: none;
+            padding: 10px 24px;
+            border: 1px solid var(--accent-vermilion);
+            color: var(--accent-vermilion);
+            transition: all 0.4s ease;
+            margin-top: var(--space-xs);
+            font-family: inherit;
+        }
+
+        .product-action:hover {
+            background: var(--accent-vermilion);
+            color: var(--paper);
+            letter-spacing: 0.2em;
+        }
+
+        .product-action .arrow {
+            transition: transform 0.3s;
+        }
+        .product-action:hover .arrow {
+            transform: translateX(4px);
+        }
+
+        .product-pending-tag {
+            display: inline-block;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            color: var(--ink-light);
+            padding: 8px 24px;
+            border: 1px dashed var(--ink-light);
+            margin-top: var(--space-xs);
+        }
+
+        /* 会籍区域 */
+        .membership-section {
+            margin-bottom: var(--space-xxl);
+            opacity: 0;
+            animation: fadeUp 1s ease 1.0s forwards;
+        }
+
+        /* 当前会籍卡片 */
+        .current-tier {
+            position: relative;
+            padding: var(--space-lg) var(--space-md);
+            margin-bottom: var(--space-md);
+            border: 1px solid var(--ink-mid);
+            background: linear-gradient(to bottom, var(--paper), var(--paper-warm));
+            overflow: hidden;
+        }
+
+        .current-tier::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-vermilion);
+        }
+
+        .tier-badge {
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            padding: 4px 12px;
+            background: var(--accent-vermilion);
+            color: var(--paper);
+        }
+
+        .tier-header {
+            margin-bottom: var(--space-sm);
+        }
+
+        .tier-name {
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: 0.4em;
+            color: var(--ink-full);
+            margin-bottom: 4px;
+            margin-left: 0.4em;
+        }
+
+        .tier-poetry {
+            font-size: 14px;
+            font-weight: 300;
+            color: var(--ink-mid);
+            letter-spacing: 0.15em;
+        }
+
+        .tier-end-date {
+            font-size: 12px;
+            color: var(--accent-vermilion);
+            letter-spacing: 0.1em;
+            margin-top: var(--space-xs);
+            font-weight: 400;
+        }
+
+        .tier-desc {
+            font-size: 13px;
+            color: var(--ink-mid);
+            line-height: 1.8;
+            margin-top: var(--space-md);
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--ink-wash);
+        }
+
+        /* 切换会籍控制区 */
+        .tier-toggle-area {
+            text-align: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .toggle-btn {
+            font-family: inherit;
+            font-size: 12px;
+            letter-spacing: 0.2em;
+            padding: 12px 32px;
+            border: 1px solid var(--accent-vermilion);
+            background: transparent;
+            color: var(--accent-vermilion);
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .toggle-btn:hover {
+            background: var(--accent-vermilion);
+            color: var(--paper);
+            letter-spacing: 0.25em;
+        }
+
+        /* 会籍选项区（默认隐藏） */
+        .tier-options-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.6s ease, opacity 0.4s ease;
+            opacity: 0;
+        }
+
+        .tier-options-container.expanded {
+            max-height: 600px;
+            opacity: 1;
+        }
+
+        .options-label {
+            text-align: center;
+            font-size: 11px;
+            letter-spacing: 0.4em;
+            color: var(--ink-light);
+            margin-bottom: var(--space-md);
+            margin-top: var(--space-lg);
+        }
+
+        .tier-options {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .tier-option {
+            position: relative;
+            padding: var(--space-md);
+            border: 1px solid var(--ink-wash);
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.4s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tier-option:hover {
+            border-color: var(--ink-mid);
+            background: rgba(255,255,255,0.6);
+            transform: translateX(4px);
+        }
+
+        .tier-option.active {
+            border-color: var(--accent-vermilion);
+            border-left: 3px solid var(--accent-vermilion);
+            background: rgba(255,255,255,0.8);
+            pointer-events: none;
+        }
+
+        .tier-option-content {
+            flex: 1;
+        }
+
+        .tier-option-name {
+            font-size: 18px;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            color: var(--ink-full);
+            margin-bottom: 4px;
+            margin-left: 0.3em;
+        }
+
+        .tier-option-poetry {
+            font-size: 12px;
+            color: var(--ink-mid);
+            letter-spacing: 0.1em;
+        }
+
+        .tier-option-action {
+            font-family: inherit;
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            padding: 8px 20px;
+            border: 1px solid var(--ink-light);
+            color: var(--ink-mid);
+            background: transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .tier-option:hover .tier-option-action {
+            border-color: var(--accent-vermilion);
+            color: var(--accent-vermilion);
+        }
+
+        .tier-option.active .tier-option-action {
+            border-color: var(--accent-vermilion);
+            background: var(--accent-vermilion);
+            color: var(--paper);
+        }
+
+        /* 相迎状态 */
+        .sogei-state {
+            text-align: center;
+            padding: var(--space-xl) var(--space-md);
+            border: 1px dashed var(--ink-light);
+            margin-bottom: var(--space-lg);
+        }
+
+        .sogei-title {
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: 0.5em;
+            color: var(--ink-mid);
+            margin-bottom: var(--space-sm);
+            margin-left: 0.5em;
+        }
+
+        .sogei-poetry {
+            font-size: 14px;
+            color: var(--ink-light);
+            letter-spacing: 0.2em;
+        }
+
+        /* 底部 */
+        .brand-mark {
+            text-align: center;
+            margin-bottom: var(--space-lg);
+            opacity: 0;
+            animation: fadeIn 0.8s ease 1.8s forwards;
+        }
+
+        .mark-glyph {
+            font-size: 40px;
+            font-weight: 300;
+            color: var(--ink-wash);
+            letter-spacing: 0.3em;
+            margin-left: 0.3em;
+            user-select: none;
+        }
+
+        .mark-note {
+            font-size: 11px;
+            color: var(--ink-light);
+            letter-spacing: 0.3em;
+            margin-top: var(--space-xs);
+        }
+
+        .page-footer {
+            margin-top: var(--space-xl);
+            padding-top: var(--space-md);
+            padding-bottom: var(--space-lg);
+            border-top: 1px solid var(--ink-wash);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            opacity: 0;
+            animation: fadeUp 1s ease 2.0s forwards;
+        }
+
+        .footer-brand {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--ink-deep);
+            letter-spacing: 0.25em;
+        }
+
+        .footer-time {
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            color: var(--ink-mid);
+        }
+
+        /* 动画 */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes growDown {
+            from { opacity: 0; height: 0; }
+            to { opacity: 1; height: 48px; }
+        }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            .container { padding: 0 var(--space-sm); }
+            .user-name {
+                font-size: 26px;
+                letter-spacing: 0.35em;
+                margin-left: 0.35em;
+            }
+            .user-name-input {
+                font-size: 26px;
+                width: 160px;
+            }
+            .brand-spine { display: none; }
+            .tier-name {
+                font-size: 24px;
+                letter-spacing: 0.3em;
+            }
+            .tier-option {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-sm);
+            }
+            .tier-option-action {
+                width: 100%;
+                text-align: center;
+            }
+            .page-footer {
+                flex-direction: column;
+                gap: var(--space-xs);
+                text-align: center;
+            }
+        }
+    </style>
+<base target="_blank">
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <div class="header-brand">节物</div>
-      <div class="header-actions">
-        <a href="admin/" class="btn btn-link hidden" id="adminLink">管理面板</a>
-        <button class="btn btn-link" id="logoutBtn">登出</button>
-      </div>
-    </header>
 
-    <main>
-      <div id="message" class="message hidden"></div>
-
-      <section class="section">
-        <h2 class="section-title">个人信息</h2>
-        <div class="data-list" id="profileData">
-          <div class="data-row">
-            <span class="data-label">手机</span>
-            <span class="data-value" id="phone">-</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">昵称</span>
-            <span class="data-value">
-              <span id="nicknameDisplay">-</span>
-              <input type="text" class="form-input hidden" id="nicknameInput" style="width: 150px;">
-              <button class="btn btn-small" id="editNicknameBtn">修改</button>
-              <button class="btn btn-small hidden" id="saveNicknameBtn">保存</button>
-              <button class="btn btn-small btn-link hidden" id="cancelNicknameBtn">取消</button>
-            </span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">角色</span>
-            <span class="data-value" id="roles">-</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">注册时间</span>
-            <span class="data-value" id="createdAt">-</span>
-          </div>
+    <!-- 品牌边注 -->
+    <aside class="brand-spine">
+        <div class="brand-spine-content">
+            <span class="spine-title">节物</span>
+            <span class="spine-line"></span>
+            <span class="spine-text">岁时有信</span>
+            <span class="spine-text">万物成章</span>
         </div>
-      </section>
+    </aside>
 
-      <section class="section">
-        <h2 class="section-title">会员信息</h2>
-        <div class="data-list">
-          <div class="data-row">
-            <span class="data-label">等级</span>
-            <span class="data-value"><span class="tag" id="membershipPlan">free</span></span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">到期时间</span>
-            <span class="data-value" id="membershipExpires">-</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">来源</span>
-            <span class="data-value" id="membershipSource">-</span>
-          </div>
+    <div class="container">
+        <!-- 导航 -->
+        <header class="nav-header">
+            <nav class="nav-inner">
+                <a href="#" class="brand">节物</a>
+                <div class="nav-links">
+                    <a href="#" id="adminLink" class="hidden">管理</a>
+                    <a href="#" id="logoutBtn">登出</a>
+                </div>
+            </nav>
+        </header>
+
+        <!-- 消息提示 -->
+        <div id="message" class="message hidden"></div>
+
+        <!-- 用户信息 - 无头像 -->
+        <section class="user-header">
+            <div id="userNameDisplay">
+                <h1 class="user-name">
+                    <span id="nicknameText">-</span>
+                    <span class="edit-btn" id="editNicknameBtn">修改</span>
+                </h1>
+            </div>
+            <div id="userNameEdit" class="hidden">
+                <input type="text" class="user-name-input" id="nicknameInput" maxlength="20">
+                <div class="user-name-actions">
+                    <button class="save-btn" id="saveNicknameBtn">保存</button>
+                    <button id="cancelNicknameBtn">取消</button>
+                </div>
+            </div>
+            <div class="user-meta">
+                <span>编号 <span id="userSub">-</span></span>
+                <span>加入于 <span id="userCreatedAt">-</span></span>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- 出品区域 -->
+        <section class="products-section">
+            <div class="section-label">出 品</div>
+
+            <div class="product-list">
+                <div class="product-card active" onclick="window.location.href='/shishi'">
+                    <div class="product-header">
+                        <div class="product-name">食事</div>
+                        <span class="product-status">已上线</span>
+                    </div>
+                    <div class="product-desc">
+                        朝食暮饮，岁岁寻常。基于科学营养学框架，为每一餐生成专业的营养结构分析。
+                    </div>
+                    <a href="/shishi" class="product-action" onclick="event.stopPropagation()">
+                        立即开始 <span class="arrow">→</span>
+                    </a>
+                </div>
+
+                <div class="product-card pending">
+                    <div class="product-header">
+                        <div class="product-name">物候</div>
+                        <span class="product-status">筹备中</span>
+                    </div>
+                    <div class="product-desc">
+                        应候而动，知身如友。基于运动康复学，持续追踪你的身体状态。
+                    </div>
+                    <div class="product-pending-tag">敬候佳音</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 会籍区域 -->
+        <section class="membership-section" id="membershipSection">
+            <!-- 动态渲染内容 -->
+        </section>
+
+        <!-- 底部标记 -->
+        <div class="brand-mark">
+            <div class="mark-glyph">節</div>
+            <p class="mark-note">岁时有信 · 万物成章</p>
         </div>
-      </section>
-    </main>
-  </div>
 
-  <script src="js/api.js"></script>
-  <script>
-    (function() {
-      const messageEl = document.getElementById('message');
-      const phoneEl = document.getElementById('phone');
-      const nicknameDisplayEl = document.getElementById('nicknameDisplay');
-      const nicknameInputEl = document.getElementById('nicknameInput');
-      const editNicknameBtn = document.getElementById('editNicknameBtn');
-      const saveNicknameBtn = document.getElementById('saveNicknameBtn');
-      const cancelNicknameBtn = document.getElementById('cancelNicknameBtn');
-      const rolesEl = document.getElementById('roles');
-      const createdAtEl = document.getElementById('createdAt');
-      const membershipPlanEl = document.getElementById('membershipPlan');
-      const membershipExpiresEl = document.getElementById('membershipExpires');
-      const membershipSourceEl = document.getElementById('membershipSource');
-      const logoutBtn = document.getElementById('logoutBtn');
-      const adminLink = document.getElementById('adminLink');
+        <!-- 页脚 -->
+        <footer class="page-footer">
+            <span class="footer-brand">节物出品</span>
+            <span class="footer-time" id="footerTime">-</span>
+        </footer>
+    </div>
 
-      function showMessage(text, type) {
-        messageEl.textContent = text;
-        messageEl.className = 'message message-' + type;
-        messageEl.classList.remove('hidden');
-      }
-
-      function hideMessage() {
-        messageEl.classList.add('hidden');
-      }
-
-      function maskPhone(phone) {
-        if (!phone || phone.length < 7) return phone;
-        return phone.slice(0, 3) + '****' + phone.slice(-4);
-      }
-
-      function formatDate(dateStr) {
-        if (!dateStr) return '-';
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('zh-CN');
-      }
-
-      function formatPlan(plan) {
-        const plans = {
-          'free': '免费',
-          'monthly': '月度会员',
-          'yearly': '年度会员',
-          'lifetime': '永久会员'
+    <script src="js/api.js"></script>
+    <script>
+        // 会籍配置
+        const tierConfig = {
+            'monthly': {
+                id: 'monthly',
+                name: '月令',
+                poetry: '按月奉令，流光相照',
+                desc: '无限使用食事。按月订阅，随时可停。'
+            },
+            'yearly': {
+                id: 'yearly',
+                name: '四时',
+                poetry: '岁有四时，春秋代序',
+                desc: '无限使用食事。按年订阅，享优惠价格。'
+            },
+            'lifetime': {
+                id: 'lifetime',
+                name: '世守',
+                poetry: '一世相守，岁月同辉',
+                desc: '无限使用食事。一次付费，终身享用。'
+            }
         };
-        return plans[plan] || plan;
-      }
 
-      async function loadProfile() {
-        try {
-          const user = await api.getMe();
+        // 当前用户数据
+        let userData = null;
+        let isOptionsExpanded = false;
 
-          phoneEl.textContent = maskPhone(user.phone);
-          nicknameDisplayEl.textContent = user.nickname;
-          nicknameInputEl.value = user.nickname;
-          rolesEl.textContent = user.roles ? user.roles.join(', ') : 'user';
-          createdAtEl.textContent = formatDate(user.created_at);
+        // DOM 元素
+        const messageEl = document.getElementById('message');
+        const nicknameText = document.getElementById('nicknameText');
+        const nicknameInput = document.getElementById('nicknameInput');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userNameEdit = document.getElementById('userNameEdit');
+        const editNicknameBtn = document.getElementById('editNicknameBtn');
+        const saveNicknameBtn = document.getElementById('saveNicknameBtn');
+        const cancelNicknameBtn = document.getElementById('cancelNicknameBtn');
+        const userSubEl = document.getElementById('userSub');
+        const userCreatedAtEl = document.getElementById('userCreatedAt');
+        const adminLink = document.getElementById('adminLink');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const footerTimeEl = document.getElementById('footerTime');
 
-          // Show admin link for admin users
-          if (user.roles && user.roles.includes('admin')) {
-            adminLink.classList.remove('hidden');
-          }
-
-          membershipPlanEl.textContent = formatPlan(user.membership?.plan || 'free');
-          membershipExpiresEl.textContent = user.membership?.expires_at
-            ? formatDate(user.membership.expires_at)
-            : (user.membership?.plan === 'lifetime' ? '永久' : '-');
-          membershipSourceEl.textContent = user.membership?.source || '-';
-
-          api.setUserInfo(user);
-        } catch (error) {
-          showMessage(error.message || '加载失败', 'error');
-        }
-      }
-
-      editNicknameBtn.addEventListener('click', function() {
-        nicknameDisplayEl.classList.add('hidden');
-        editNicknameBtn.classList.add('hidden');
-        nicknameInputEl.classList.remove('hidden');
-        saveNicknameBtn.classList.remove('hidden');
-        cancelNicknameBtn.classList.remove('hidden');
-        nicknameInputEl.focus();
-      });
-
-      cancelNicknameBtn.addEventListener('click', function() {
-        nicknameInputEl.classList.add('hidden');
-        saveNicknameBtn.classList.add('hidden');
-        cancelNicknameBtn.classList.add('hidden');
-        nicknameDisplayEl.classList.remove('hidden');
-        editNicknameBtn.classList.remove('hidden');
-        nicknameInputEl.value = nicknameDisplayEl.textContent;
-      });
-
-      saveNicknameBtn.addEventListener('click', async function() {
-        const newNickname = nicknameInputEl.value.trim();
-
-        if (!newNickname) {
-          showMessage('昵称不能为空', 'error');
-          return;
+        // 显示消息
+        function showMessage(text, type) {
+            messageEl.textContent = text;
+            messageEl.className = 'message message-' + type;
+            messageEl.classList.remove('hidden');
+            setTimeout(() => messageEl.classList.add('hidden'), 3000);
         }
 
-        try {
-          const result = await api.updateMe(newNickname);
-          nicknameDisplayEl.textContent = result.nickname;
-          nicknameInputEl.classList.add('hidden');
-          saveNicknameBtn.classList.add('hidden');
-          cancelNicknameBtn.classList.add('hidden');
-          nicknameDisplayEl.classList.remove('hidden');
-          editNicknameBtn.classList.remove('hidden');
-          showMessage('昵称已更新', 'success');
-          setTimeout(hideMessage, 2000);
-        } catch (error) {
-          showMessage(error.message || '更新失败', 'error');
+        // 格式化日期
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}.${month}.${day}`;
         }
-      });
 
-      logoutBtn.addEventListener('click', async function() {
-        await api.logout();
-        window.location.href = 'login.html';
-      });
-
-      api.ensureAuth().then(function(authed) {
-        if (authed) {
-          loadProfile();
+        // 获取农历年份和节气（简化版）
+        function getLunarTime() {
+            const year = new Date().getFullYear();
+            const lunarYears = ['甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未', '壬申', '癸酉',
+                               '甲戌', '乙亥', '丙子', '丁丑', '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未',
+                               '甲申', '乙酉', '丙戌', '丁亥', '戊子', '己丑', '庚寅', '辛卯', '壬辰', '癸巳',
+                               '甲午', '乙未', '丙申', '丁酉', '戊戌', '己亥', '庚子', '辛丑', '壬寅', '癸卯',
+                               '甲辰', '乙巳', '丙午', '丁未', '戊申', '己酉', '庚戌', '辛亥', '壬子', '癸丑',
+                               '甲寅', '乙卯', '丙辰', '丁巳', '戊午', '己未', '庚申', '辛酉', '壬戌', '癸亥'];
+            const lunarYear = lunarYears[(year - 4) % 60];
+            return `${lunarYear}年`;
         }
-      });
-    })();
-  </script>
+
+        // 加载用户数据
+        async function loadProfile() {
+            try {
+                const user = await api.getMe();
+                userData = user;
+
+                // 更新用户信息
+                nicknameText.textContent = user.nickname || '用户';
+                nicknameInput.value = user.nickname || '';
+
+                // 生成用户编号（取前8位）
+                const subShort = user.sub.toString().slice(0, 8).toUpperCase();
+                userSubEl.textContent = `SEKI-${subShort}`;
+
+                // 注册时间
+                userCreatedAtEl.textContent = formatDate(user.created_at);
+
+                // 管理员链接
+                if (user.roles && user.roles.includes('admin')) {
+                    adminLink.href = 'admin/';
+                    adminLink.classList.remove('hidden');
+                }
+
+                // 渲染会籍
+                renderMembership();
+
+                // 保存用户信息
+                api.setUserInfo(user);
+            } catch (error) {
+                showMessage(error.message || '加载失败', 'error');
+            }
+        }
+
+        // 渲染会籍区域
+        function renderMembership() {
+            const section = document.getElementById('membershipSection');
+            const membership = userData?.membership;
+            const plan = membership?.plan || 'free';
+
+            if (plan === 'free') {
+                renderSogeiState(section);
+            } else {
+                renderMemberState(section, plan, membership);
+            }
+        }
+
+        // 渲染相迎状态（非会员）
+        function renderSogeiState(section) {
+            section.innerHTML = `
+                <div class="section-label">会 籍</div>
+
+                <div class="sogei-state">
+                    <h2 class="sogei-title">相迎</h2>
+                    <p class="sogei-poetry">闻君在门，倒屣相迎</p>
+                </div>
+
+                <div class="options-label">选 择 会 籍</div>
+                <div class="tier-options">
+                    ${Object.values(tierConfig).map(tier => `
+                        <div class="tier-option" onclick="subscribe('${tier.id}')">
+                            <div class="tier-option-content">
+                                <div class="tier-option-name">${tier.name}</div>
+                                <div class="tier-option-poetry">${tier.poetry}</div>
+                            </div>
+                            <button class="tier-option-action">订阅</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 渲染会员状态
+        function renderMemberState(section, plan, membership) {
+            const tier = tierConfig[plan];
+            if (!tier) {
+                renderSogeiState(section);
+                return;
+            }
+
+            const isLifetime = plan === 'lifetime';
+            const expiresAt = membership?.expires_at;
+
+            section.innerHTML = `
+                <div class="section-label">会 籍</div>
+
+                <div class="current-tier" id="currentTierCard">
+                    <span class="tier-badge">当前会籍</span>
+                    <div class="tier-header">
+                        <h2 class="tier-name">${tier.name}</h2>
+                        <p class="tier-poetry">${tier.poetry}</p>
+                        ${!isLifetime && expiresAt ? `<p class="tier-end-date">有效期至 ${formatDate(expiresAt)}</p>` : ''}
+                        ${isLifetime ? `<p class="tier-end-date">永久有效</p>` : ''}
+                    </div>
+                    <div class="tier-desc">
+                        ${tier.desc}
+                    </div>
+                </div>
+
+                <div class="tier-toggle-area">
+                    <button class="toggle-btn" onclick="toggleOptions()">
+                        ${isOptionsExpanded ? '收 起' : '切换会籍'}
+                    </button>
+                </div>
+
+                <div class="tier-options-container ${isOptionsExpanded ? 'expanded' : ''}" id="tierOptions">
+                    <div class="options-label">切 换 会 籍</div>
+                    <div class="tier-options">
+                        ${Object.values(tierConfig).map(t => {
+                            const isActive = t.id === plan;
+                            return `
+                                <div class="tier-option ${isActive ? 'active' : ''}"
+                                     onclick="${isActive ? '' : `switchTier('${t.id}')`}">
+                                    <div class="tier-option-content">
+                                        <div class="tier-option-name">${t.name}</div>
+                                        <div class="tier-option-poetry">${t.poetry}</div>
+                                    </div>
+                                    ${isActive
+                                        ? '<button class="tier-option-action">当前</button>'
+                                        : '<button class="tier-option-action">切换至</button>'
+                                    }
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 展开/收起选项
+        function toggleOptions() {
+            isOptionsExpanded = !isOptionsExpanded;
+            const optionsContainer = document.getElementById('tierOptions');
+            const toggleBtn = document.querySelector('.toggle-btn');
+
+            if (optionsContainer) {
+                optionsContainer.classList.toggle('expanded');
+            }
+            if (toggleBtn) {
+                toggleBtn.textContent = isOptionsExpanded ? '收 起' : '切换会籍';
+            }
+        }
+
+        // 订阅（预留接口）
+        function subscribe(tierId) {
+            // TODO: 对接支付系统
+            showMessage('支付功能即将上线', 'success');
+        }
+
+        // 切换会籍（预留接口）
+        function switchTier(tierId) {
+            // TODO: 对接支付系统
+            showMessage('支付功能即将上线', 'success');
+        }
+
+        // 昵称编辑
+        editNicknameBtn.addEventListener('click', function() {
+            userNameDisplay.classList.add('hidden');
+            userNameEdit.classList.remove('hidden');
+            nicknameInput.focus();
+            nicknameInput.select();
+        });
+
+        cancelNicknameBtn.addEventListener('click', function() {
+            userNameEdit.classList.add('hidden');
+            userNameDisplay.classList.remove('hidden');
+            nicknameInput.value = nicknameText.textContent;
+        });
+
+        saveNicknameBtn.addEventListener('click', async function() {
+            const newNickname = nicknameInput.value.trim();
+            if (!newNickname) {
+                showMessage('昵称不能为空', 'error');
+                return;
+            }
+
+            try {
+                const result = await api.updateMe(newNickname);
+                nicknameText.textContent = result.nickname;
+                userNameEdit.classList.add('hidden');
+                userNameDisplay.classList.remove('hidden');
+                showMessage('昵称已更新', 'success');
+
+                // 更新缓存的用户信息
+                if (userData) {
+                    userData.nickname = result.nickname;
+                    api.setUserInfo(userData);
+                }
+            } catch (error) {
+                showMessage(error.message || '更新失败', 'error');
+            }
+        });
+
+        // 回车保存
+        nicknameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                saveNicknameBtn.click();
+            }
+        });
+
+        // 登出
+        logoutBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            await api.logout();
+            window.location.href = 'login.html';
+        });
+
+        // 设置页脚时间
+        footerTimeEl.textContent = getLunarTime();
+
+        // 初始化
+        api.ensureAuth().then(function(authed) {
+            if (authed) {
+                loadProfile();
+            }
+        });
+    </script>
 </body>
 </html>

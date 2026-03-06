@@ -97,3 +97,24 @@ See `.env.example` for all configurable values. Key variables:
 ## Testing
 
 Tests use Node.js built-in test runner (`node:test`), not vitest. Tests run against in-memory SQLite with auto-generated test keys. The test file handles its own environment setup before importing modules.
+
+## Production Deployment
+
+详见 [DEPLOY.md](./DEPLOY.md)。
+
+### 部署目录结构
+
+- **开发目录**: `/data/dev/brand-hub` - Git 仓库，唯一源码
+- **部署目录**: `/data/app/brand-hub` - 仅存配置 (`.env`) 和数据 (`data/`, `keys/`)
+
+### 上线流程
+
+功能代码更新后，需部署到正式环境：
+
+```bash
+# 1. 安装新依赖（如有）
+npm install --omit=dev
+
+# 2. 重启 PM2 服务
+pm2 restart brand-hub
+```
