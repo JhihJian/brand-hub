@@ -5,6 +5,7 @@
 const { v4: uuidv4 } = require('uuid');
 const router = require('fastify').fastify();
 const { getDb } = require('../db');
+const { config } = require('../config');
 const smsService = require('../services/sms');
 const tokenService = require('../services/token');
 const cache = require('../services/cache');
@@ -184,7 +185,7 @@ async function register(request, reply) {
     access_token: accessToken,
     refresh_token: refreshToken.token,
     token_type: 'Bearer',
-    expires_in: 43200, // 12 hours
+    expires_in: config.jwt.accessExpiresInSeconds,
     user: {
       sub: userSub,
       phone,
@@ -246,7 +247,7 @@ async function login(request, reply) {
     access_token: accessToken,
     refresh_token: refreshToken.token,
     token_type: 'Bearer',
-    expires_in: 900,
+    expires_in: config.jwt.accessExpiresInSeconds,
     user: {
       sub: user.sub,
       phone: user.phone,
@@ -319,7 +320,7 @@ async function loginPassword(request, reply) {
     access_token: accessToken,
     refresh_token: refreshToken.token,
     token_type: 'Bearer',
-    expires_in: 900,
+    expires_in: config.jwt.accessExpiresInSeconds,
     user: {
       sub: user.sub,
       phone: user.phone,
@@ -353,7 +354,7 @@ async function refresh(request, reply) {
     access_token: accessToken,
     refresh_token: result.newToken.token,
     token_type: 'Bearer',
-    expires_in: 900,
+    expires_in: config.jwt.accessExpiresInSeconds,
   });
 }
 

@@ -4,6 +4,27 @@
 
 require('dotenv').config();
 
+/**
+ * Parse expiresIn string to seconds
+ * @param {string} expiresIn - e.g. '12h', '30d', '3600s', '60m'
+ * @returns {number} seconds
+ */
+function parseExpiresIn(expiresIn) {
+  const match = expiresIn.match(/^(\d+)([smhd])$/);
+  if (!match) {
+    return parseInt(expiresIn, 10) || 43200; // default 12h
+  }
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+  switch (unit) {
+    case 's': return value;
+    case 'm': return value * 60;
+    case 'h': return value * 60 * 60;
+    case 'd': return value * 24 * 60 * 60;
+    default: return value;
+  }
+}
+
 const config = {
   // Environment
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -22,6 +43,8 @@ const config = {
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '12h',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
     audiences: process.env.JWT_AUDIENCES ? process.env.JWT_AUDIENCES.split(',').map(a => a.trim()) : ['brand-hub'],
+    // Derived value for API responses
+    accessExpiresInSeconds: parseExpiresIn(process.env.JWT_ACCESS_EXPIRES_IN || '12h'),
   },
 
   // SMS (spug)
